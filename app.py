@@ -167,7 +167,7 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     return buffer
 
 def generate_random_items():
-    num_items = random.randint(19, 29)
+    num_items = random.randint(19, 22)
     items = []
     selected_items = random.sample(ITEMS, num_items)
     
