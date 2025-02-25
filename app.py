@@ -240,14 +240,14 @@ def create_zip_file(receipts):
     zip_buffer.seek(0)
     return zip_buffer
 
-st.title("Struck Superindo")
+st.title("总计用书酷")
 
-mode = st.radio("Pilih Mode", ["Manual", "Otomatis"])
-use_bold = st.checkbox("Gunakan Teks Bold", value=False)
+mode = st.radio("Pilih Mode", ["手动", "自动"])
+use_bold = st.checkbox("使用粗体文本", value=True)
 
-store_name = st.text_input("Nama toko:", "PT LION SUPERINDO")
+store_name = st.text_input("商店名称:", "PT LION SUPERINDO")
 
-uploaded_logo = st.file_uploader("Upload logo toko", type=["png", "jpg", "jpeg"])
+uploaded_logo = st.file_uploader("上传您的商店", type=["png", "jpg", "jpeg"])
 if uploaded_logo is not None:
     logo_path = "temp_logo.png"
     with open(logo_path, "wb") as f:
