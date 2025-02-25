@@ -59,16 +59,186 @@ def apply_discount(items):
     return discounted_items
 
 def create_receipt(store_name, items, total, payment_method, receipt_date, logo_path, use_bold=False, cashier_name=None):
-    # ... (rest of the function remains the same)
+    buffer = io.BytesIO()
+    width, height = 45 * mm, 210 * mm
+    c = canvas.Canvas(buffer, pagesize=(width, height))
+
+    font = "Calibri-Bold" if use_bold else "Calibri"
+
+    left_indent = 2 * mm
+    x = left_indent
+    y = height - 5 * mm
+
+    logo = ImageReader(logo_path)
+    logo_width = 10 * mm
+    logo_height = 10 * mm
+    c.drawImage(logo, x, y - logo_height, width=logo_width, height=logo_height)
+
+    text_start = x + logo_width + 2 * mm
+
+    c.setFont(font, 8)
+    c.drawString(text_start, y, store_name)
+    y -= 3*mm
+    c.drawString(text_start, y, "NPWP: 00.178.137.2-604.000")
+    y -= 3*mm
+    c.drawString(text_start, y, "Tanggal Pengukuhan: 06-06-97")
+    y -= 3*mm
+    c.drawString(text_start, y, "MUARA KARANG RAYA NO. 2")
+    y -= 3*mm
+    c.drawString(text_start, y, "JAKARTA UTARA")
+    y -= 3*mm
+    c.drawString(text_start, y, "Telp: 6697927")
+    y -= 8*mm
+
+    c.setFont(font, 8)
+    c.drawString(x, y, f"{receipt_date} No: {random.randint(1000, 9999)}")
+    if cashier_name:
+        c.drawString(x, y - 3*mm, f"Kasir: {cashier_name}")
+        y -= 3*mm
+    y -= 1*mm
+
+    separator = '=' * int((width - 2*x) / c.stringWidth('=', font, 8))
+    y -= 2*mm
+
+    c.setFont("MSGothic", 8)
+    c.drawString(x, y, "DESKRIPSI        QTY    HARGA")
+    y -= 3*mm
+    c.drawString(x, y, separator)
+    y -= 3*mm
+
+    for item in items:
+        name = item['name'][:15]
+        quantity = item['quantity']
+        price = item['price']
+        item_total = price * quantity
+        
+        item_text = f"{name:<15} {quantity:>3} {item_total:>8,.0f}"
+        c.drawString(x, y, item_text)
+        y -= 3*mm
+        
+        if item.get('hemat', 0) > 0:
+            original_price = item.get('original_price', price)
+            hemat_text = f"HEMAT: {item['hemat']:,.0f}"
+            c.setFillColorRGB(1, 0, 0)
+            c.drawString(x + 2*mm, y, hemat_text)
+            c.setFillColorRGB(0, 0, 0)
+            y -= 3*mm
+
+    y -= 1*mm
+    c.drawString(x, y, separator)
+    y -= 3*mm
+
+    ppn = total * 0.11
+    total_with_ppn = total + ppn
+
+    c.drawString(x, y, f"Sub Total: {total:,.0f}")
+    y -= 3*mm
+    c.drawString(x, y, f"PPN (11%): {ppn:,.0f}")
+    y -= 3*mm
+    c.drawString(x, y, f"Total (Termasuk PPN): {total_with_ppn:,.0f}")
+    y -= 3*mm
+    c.drawString(x, y, f"Pembayaran - {payment_method}: {total_with_ppn:,.0f}")
+    y -= 3*mm
+    c.drawString(x, y, f"Nomor: B{random.randint(100000000, 999999999)}")
+    y -= 4*mm
+
+    c.drawString(x, y, f"Total Item: {len(items)}")
+    y -= 4*mm
+
+    c.setFont(font, 8)
+    footer_lines = [
+        "**Terima kasih**",
+        "SARAN ANDA KEPUASAN KAMI",
+        "TELP BEBAS PULSA: 0800 1403 210",
+        "WHATSAPP: 081213137035 (CALL ONLY)",
+        "SENIN - JUMAT 08:00 - 17:00 WIB",
+        "Email: cs@superindo.co.id",
+        "www.superindo.co.id"
+    ]
+
+    for line in footer_lines:
+        text_width = c.stringWidth(line, font, 8)
+        c.drawString((width - text_width) / 2, y, line)
+        y -= 3*mm
+
+    c.showPage()
+    c.save()
+    buffer.seek(0)
+    return buffer
 
 def generate_random_items():
-    # ... (rest of the function remains the same)
+    num_items = random.randint(19, 22)
+    items = []
+    selected_items = random.sample(ITEMS, num_items)
+
+    for item in selected_items:
+        quantity = random.randint(1, 5)
+        if "Premium" in item:
+            price = random.randint(3500, 12900)
+        else:
+            price = random.randint(1500, 4900)
+        
+        items.append({
+            "name": item,
+            "quantity": quantity,
+            "price": price
+        })
+
+    return apply_discount(items)
 
 def generate_random_receipts(num_receipts, store_name, logo_path, use_bold):
-    # ... (rest of the function remains the same)
+    receipts = []
+    for _ in range(num_receipts):
+        items = generate_random_items()
+        receipt_date = generate_random_date()
+        cashier = random.choice(CASHIERS)
+        subtotal = sum(item['quantity'] * item['price'] for item in items)
+        payment_method = random.choice(["BNI QRIS", "MANDIRI", "BCA", "OVO", "GOPAY", "CASH"])
+        
+        pdf_buffer = create_receipt(
+            store_name,
+            items,
+            subtotal,
+            payment_method,
+            receipt_date,
+            logo_path,
+            use_bold,
+            cashier
+        )
+        
+        receipts.append({
+            'buffer': pdf_buffer,
+            'date': receipt_date,
+            'cashier': cashier,
+            'items': items,
+            'total': subtotal + (subtotal * 0.11),
+            'payment_method': payment_method
+        })
+
+    return receipts
 
 def create_zip_file(receipts):
-    # ... (rest of the function remains the same)
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+        for i, receipt in enumerate(receipts):
+            timestamp = receipt['date'].replace('/', '').replace(':', '').replace(' ', '_').replace('(', '').replace(')', '')
+            filename = f"receipt_{timestamp}_cashier_{receipt['cashier']}.pdf"
+            zip_file.writestr(filename, receipt['buffer'].getvalue())
+        
+        summary = "Receipts Summary:\n\n"
+        for i, receipt in enumerate(receipts, 1):
+            summary += f"Receipt {i}:\n"
+            summary += f"Date: {receipt['date']}\n"
+            summary += f"Cashier: {receipt['cashier']}\n"
+            summary += f"Payment Method: {receipt['payment_method']}\n"
+            summary += f"Total: Rp {receipt['total']:,.2f}\n"
+            summary += f"Items: {len(receipt['items'])}\n\n"
+        
+        zip_file.writestr("summary.txt", summary)
+
+    zip_buffer.seek(0)
+    return zip_buffer
 
 st.title("收据生成器")
 
@@ -134,9 +304,9 @@ if mode == "手动":
         ppn = subtotal * 0.11
         total = subtotal + ppn
 
-        st.write(f"Subtotal: Rp {subtotal:,.2f}")
+        st.write(f"小计: Rp {subtotal:,.2f}")
         st.write(f"PPN (11%): Rp {ppn:,.2f}")
-        st.write(f"Total: Rp {total:,.2f}")
+        st.write(f"总计: Rp {total:,.2f}")
 
         payment_methods = ["BNI QRIS", "MANDIRI", "BCA", "OVO", "GOPAY", "CASH"]
         payment_method = st.selectbox("支付方式:", payment_methods)
@@ -192,7 +362,6 @@ elif mode == "自动":
         st.write(f"总销售额: Rp {total_sales:,.2f}")
         st.write(f"每张收据平均: Rp {(total_sales/num_receipts):,.2f}")
 
-# Add footer
 st.markdown("---")
 st.markdown("### 关于应用")
 st.write("此应用程序用于生成 Superindo 购物收据。")
