@@ -261,7 +261,7 @@ if 'items' not in st.session_state:
 if 'cashier' not in st.session_state:
     st.session_state['cashier'] = random.choice(CASHIERS)
 
-if mode == "Manual":
+if mode == "手动":
     st.subheader("Atur Barang Belanjaan")
     num_items = st.number_input("Jumlah barang:", min_value=1, value=5, step=1)
 
@@ -336,7 +336,7 @@ if mode == "Manual":
                 mime="application/pdf"
             )
 
-elif mode == "Otomatis":
+elif mode == "自动":
     st.subheader("Generate Multiple Receipts")
     
     num_receipts = st.number_input("Jumlah struk yang akan dibuat:", min_value=1, max_value=50, value=5)
