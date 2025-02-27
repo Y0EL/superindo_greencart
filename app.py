@@ -60,14 +60,14 @@ def apply_discount(items):
 
 def create_receipt(store_name, items, total, payment_method, receipt_date, logo_path, use_bold=False, cashier_name=None):
     buffer = io.BytesIO()
-    width = 45 * mm
-    c = canvas.Canvas(buffer, pagesize=(width, A4[1]))
+    width, height = 45 * mm, 210 * mm
+    c = canvas.Canvas(buffer, pagesize=(width, height))
 
     font = "Calibri-Bold" if use_bold else "Calibri"
 
     left_indent = 2 * mm
     x = left_indent
-    y = A4[1] - 5 * mm
+    y = height - 5 * mm
 
     logo = ImageReader(logo_path)
     logo_width = 10 * mm
@@ -309,9 +309,6 @@ if mode == "手动":
         st.write(f"总计: Rp {total:,.2f}")
 
         payment_methods = ["BNI QRIS", "MANDIRI", "BCA", "OVO", "GOPAY", "CASH"]
-        payment_method = st.selectbox("支付方式:", payment_methods)
-
-        if st.button("生成  "CASH"]
         payment_method = st.selectbox("支付方式:", payment_methods)
 
         if st.button("生成收据"):
