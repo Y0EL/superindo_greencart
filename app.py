@@ -311,9 +311,6 @@ if mode == "手动":
         payment_methods = ["BNI QRIS", "MANDIRI", "BCA", "OVO", "GOPAY", "CASH"]
         payment_method = st.selectbox("支付方式:", payment_methods)
 
-        if st.button("生成  "CASH"]
-        payment_method = st.selectbox("支付方式:", payment_methods)
-
         if st.button("生成收据"):
             pdf_buffer = create_receipt(
                 store_name,
