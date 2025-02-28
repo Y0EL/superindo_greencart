@@ -295,7 +295,11 @@ if mode == "Manual":
             if "Organic" in item or "Premium" in item or "Fillet" in item or "Chops" in item:
                 price = round(random.uniform(5.99, 15.99), 2)
             elif "Detergent" in item or "Soap" in item or "Paper" in item or "Trash" in item or "Foil" in item:
-                price = round(random.uniform(3.99, 9.99), 2) 
+                price = round(random.uniform(3.99, 9.99), 2)
+            else:
+                price = round(random.uniform(1.50, 4.99), 9.99), 2)
+            else:
+                price = round(random.uniform(1.50, 4.99), 2)) 
             
             st.session_state['items'].append({
                 "name": item,
