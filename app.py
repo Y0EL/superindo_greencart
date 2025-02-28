@@ -13,8 +13,8 @@ from datetime import datetime, timedelta
 from reportlab.lib.utils import ImageReader
 import zipfile
 
-pdfmetrics.registerFont(TTFont('Calibri', 'calibri.ttf'))
-pdfmetrics.registerFont(TTFont('MSGothic', 'msgothic.ttc'))
+pdfmetrics.registerFont(TTFont('Calibri', 'Calibri.ttf'))
+pdfmetrics.registerFont(TTFont('MSGothic', 'MSGothic.ttc'))
 pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
 
 CASHIERS = ["Raymond", "Sofi", "Derren", "Jack", "Jackuavis", "Septian", "Joel", "Dgueby", "Gerald", "Sintia", "Chia", "Defi"]
