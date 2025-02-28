@@ -14,7 +14,7 @@ from reportlab.lib.utils import ImageReader
 import zipfile
 
 pdfmetrics.registerFont(TTFont('Calibri', 'Calibri.ttf'))
-pdfmetrics.registerFont(TTFont('MSGothic', 'MSGothic.ttc'))
+pdfmetrics.registerFont(TTFont('MSGothic', 'msgothic.ttc'))
 pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
 
 CASHIERS = ["Raymond", "Sofi", "Derren", "Jack", "Jackuavis", "Septian", "Joel", "Dgueby", "Gerald", "Sintia", "Chia", "Defi"]
@@ -60,14 +60,14 @@ def apply_discount(items):
 
 def create_receipt(store_name, items, total, payment_method, receipt_date, logo_path, use_bold=False, cashier_name=None):
     buffer = io.BytesIO()
-    width = 45 * mm
-    c = canvas.Canvas(buffer, pagesize=(width, A4[1]))
+    width, height = 45 * mm, 210 * mm
+    c = canvas.Canvas(buffer, pagesize=(width, height))
 
     font = "Calibri-Bold" if use_bold else "Calibri"
 
     left_indent = 2 * mm
     x = left_indent
-    y = A4[1] - 5 * mm
+    y = height - 5 * mm
 
     logo = ImageReader(logo_path)
     logo_width = 10 * mm
