@@ -334,18 +334,24 @@ if mode == "Manual":
 
         payment_methods = ["VISA", "MASTERCARD", "AMEX", "APPLE PAY", "GOOGLE PAY", "CASH"]
         payment_method = st.selectbox("Payment Method:", payment_methods)
-
-        if st.button("Generate Receipt"):
-            pdf_buffer = create_receipt(
-                store_name,
-                st.session_state['items'],
-                subtotal,
-                payment_method,
-                receipt_date,
-                logo_path,
-                use_bold,
-                st.session_state['cashier']
-            )
+        
+        if st.button("Generate Items"):
+        st.session_state['items'] = []
+        selected_items = random.sample(ITEMS, min(num_items, len(ITEMS)))
+        for item in selected_items:
+            quantity = random.randint(1, 3)
+            if "Organic" in item or "Premium" in item or "Fillet" in item or "Chops" in item:
+                price = round(random.uniform(5.99, 15.99), 2)
+            elif "Detergent" in item or "Soap" in item or "Paper" in item or "Trash" in item or "Foil" in item:
+                price = round(random.uniform(3.99, 9.99), 2)
+            else:
+                price = round(random.uniform(1.50, 4.99), 2)
+            
+            st.session_state['items'].append({
+                "name": item,
+                "quantity": quantity,
+                "price": price
+            })
 
             st.download_button(
                 label="Download Receipt PDF",
