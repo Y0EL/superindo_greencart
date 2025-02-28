@@ -299,7 +299,7 @@ if mode == "Manual":
             else:
                 price = round(random.uniform(1.50, 4.99), 9.99), 2
             else:
-                price = round(random.uniform(1.50, 4.99), 2)) 
+                price = round(random.uniform(1.50, 4.99), 2
             
             st.session_state['items'].append({
                 "name": item,
