@@ -1,21 +1,21 @@
 import streamlit as st
-from PIL import Image
 import io
 import base64
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
-import textwrap
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import random
 from datetime import datetime, timedelta
-from reportlab.lib.utils import ImageReader
 import zipfile
 
-pdfmetrics.registerFont(TTFont('Calibri', 'Calibri.ttf'))
-pdfmetrics.registerFont(TTFont('MSGothic', 'msgothic.ttc'))
-pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
+# Inisialisasi font
+try:
+    pdfmetrics.registerFont(TTFont('Calibri', 'Calibri.ttf'))
+    pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
+except:
+    st.warning("Font files not found. Using default fonts.")
 
 CASHIERS = ["Emma", "Liam", "Olivia", "Noah", "Ava", "Ethan", "Sophia", "Mason", "Isabella", "William", "Mia", "James"]
 
@@ -75,7 +75,7 @@ def apply_discount(items):
             discounted_items.append({**item, 'savings': 0})
     return discounted_items
 
-def create_receipt(store_name, items, total, payment_method, receipt_date, logo_path, use_bold=False, cashier_name=None):
+def create_receipt(store_name, items, total, payment_method, receipt_date, use_bold=False, cashier_name=None):
     buffer = io.BytesIO()
     width, height = 45 * mm, 210 * mm
     c = canvas.Canvas(buffer, pagesize=(width, height))
@@ -86,28 +86,20 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     x = left_indent
     y = height - 5 * mm
 
-    logo = ImageReader(logo_path)
-    logo_width = 10 * mm
-    logo_height = 10 * mm
-    c.drawImage(logo, x, y - logo_height, width=logo_width, height=logo_height)
-
-    text_start = x + logo_width + 2 * mm
-
     c.setFont(font, 8)
-    c.drawString(text_start, y, store_name)
+    c.drawString(x, y, store_name)
     y -= 3*mm
-    c.drawString(text_start, y, "TIN: 12-3456789")
+    c.drawString(x, y, "TIN: 12-3456789")
     y -= 3*mm
-    c.drawString(text_start, y, "Established: 01-01-2000")
+    c.drawString(x, y, "Established: 01-01-2000")
     y -= 3*mm
-    c.drawString(text_start, y, "123 MAIN STREET")
+    c.drawString(x, y, "123 MAIN STREET")
     y -= 3*mm
-    c.drawString(text_start, y, "NEW YORK, NY 10001")
+    c.drawString(x, y, "NEW YORK, NY 10001")
     y -= 3*mm
-    c.drawString(text_start, y, "Tel: (555) 123-4567")
+    c.drawString(x, y, "Tel: (555) 123-4567")
     y -= 8*mm
 
-    c.setFont(font, 8)
     c.drawString(x, y, f"{receipt_date} No: {random.randint(1000, 9999)}")
     if cashier_name:
         c.drawString(x, y - 3*mm, f"Cashier: {cashier_name}")
@@ -117,7 +109,6 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     separator = '=' * int((width - 2*x) / c.stringWidth('=', font, 8))
     y -= 2*mm
 
-    c.setFont("MSGothic", 8)
     c.drawString(x, y, "DESCRIPTION      QTY    PRICE")
     y -= 3*mm
     c.drawString(x, y, separator)
@@ -162,7 +153,6 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     c.drawString(x, y, f"Total Items: {len(items)}")
     y -= 4*mm
 
-    c.setFont(font, 8)
     footer_lines = [
         "**Thank you for shopping with us**",
         "YOUR FEEDBACK IS OUR PRIORITY",
@@ -205,7 +195,7 @@ def generate_random_items():
 
     return apply_discount(items)
 
-def generate_random_receipts(num_receipts, store_name, logo_path, use_bold):
+def generate_random_receipts(num_receipts, store_name, use_bold):
     receipts = []
     for _ in range(num_receipts):
         items = generate_random_items()
@@ -220,7 +210,6 @@ def generate_random_receipts(num_receipts, store_name, logo_path, use_bold):
             subtotal,
             payment_method,
             receipt_date,
-            logo_path,
             use_bold,
             cashier
         )
@@ -264,13 +253,6 @@ st.title("Receipt Generator")
 mode = st.radio("Select Mode", ["Manual", "Automatic"])
 use_bold = st.checkbox("Use Bold Text", value=True)
 store_name = st.text_input("Store Name:", "FRESH MARKET")
-uploaded_logo = st.file_uploader("Upload Your Store Logo", type=["png", "jpg", "jpeg"])
-if uploaded_logo is not None:
-    logo_path = "temp_logo.png"
-    with open(logo_path, "wb") as f:
-        f.write(uploaded_logo.getbuffer())
-else:
-    logo_path = "default_logo.png"
 
 if 'items' not in st.session_state:
     st.session_state['items'] = []
@@ -339,7 +321,6 @@ if mode == "Manual":
                 subtotal,
                 payment_method,
                 receipt_date,
-                logo_path,
                 use_bold,
                 st.session_state['cashier']
             )
@@ -357,7 +338,7 @@ elif mode == "Automatic":
     num_receipts = st.number_input("Number of Receipts to Generate:", min_value=1, max_value=50, value=5)
 
     if st.button("Generate Receipts"):
-        receipts = generate_random_receipts(num_receipts, store_name, logo_path, use_bold)
+        receipts = generate_random_receipts(num_receipts, store_name, use_bold)
         
         zip_buffer = create_zip_file(receipts)
         
@@ -386,7 +367,7 @@ elif mode == "Automatic":
 if st.button("Again"):
     st.session_state['items'] = []
     st.session_state['cashier'] = random.choice(CASHIERS)
-    st.experimental_rerun()
+    st.rerun()
 
 st.markdown("---")
 st.markdown("### About the App")
