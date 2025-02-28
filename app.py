@@ -311,9 +311,6 @@ if mode == "手动":
         payment_methods = ["BNI QRIS", "MANDIRI", "BCA", "OVO", "GOPAY", "CASH"]
         payment_method = st.selectbox("支付方式:", payment_methods)
 
-        if st.button("生成  "CASH"]
-        payment_method = st.selectbox("支付方式:", payment_methods)
-
         if st.button("生成收据"):
             pdf_buffer = create_receipt(
                 store_name,
@@ -370,4 +367,3 @@ st.markdown("### 关于应用")
 st.write("此应用程序用于生成 Superindo 购物收据。")
 st.write("选择手动模式以设置收据详细信息，或选择自动模式以一次生成多个收据。")
 st.write("© 2024 收据生成器")
-
