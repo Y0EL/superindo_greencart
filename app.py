@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from reportlab.lib.utils import ImageReader
 import zipfile
 
-pdfmetrics.registerFont(TTFont('Calibri', 'Calibri.ttf'))
+pdfmetrics.registerFont(TTFont('Calibri', 'calibri.ttf'))
 pdfmetrics.registerFont(TTFont('MSGothic', 'msgothic.ttc'))
 pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
 
