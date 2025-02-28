@@ -1,54 +1,37 @@
 import streamlit as st
+from PIL import Image
 import io
 import base64
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
+import textwrap
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.utils import ImageReader
-from PIL import Image
 import random
 from datetime import datetime, timedelta
+from reportlab.lib.utils import ImageReader
 import zipfile
 
-# Inisialisasi font
-try:
-    pdfmetrics.registerFont(TTFont('Calibri', 'Calibri.ttf'))
-    pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
-except:
-    st.warning("Font files not found. Using default fonts.")
+pdfmetrics.registerFont(TTFont('Calibri', 'Calibri.ttf'))
+pdfmetrics.registerFont(TTFont('MSGothic', 'msgothic.ttc'))
+pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
 
-CASHIERS = ["Emma", "Liam", "Olivia", "Noah", "Ava", "Ethan", "Sophia", "Mason", "Isabella", "William", "Mia", "James"]
+CASHIERS = ["Raymond", "Sofi", "Derren", "Jack", "Jackuavis", "Septian", "Joel", "Dgueby", "Gerald", "Sintia", "Chia", "Defi"]
 
 ITEMS = [
-    "Fuji Apples", "Red Delicious Apples", "Granny Smith Apples", "Golden Delicious Apples",
-    "Cavendish Bananas", "Red Bananas", "Plantains", "Dragon Fruit",
-    "Navel Oranges", "Mandarin Oranges", "Lemons", "Limes",
-    "Honeydew Melon", "Cantaloupe", "Watermelon", "Galia Melon",
-    "Red Grapes", "Green Grapes", "Black Grapes", "Cotton Candy Grapes",
-    "Roma Tomatoes", "Cherry Tomatoes", "Beefsteak Tomatoes", "Heirloom Tomatoes",
-    "Romaine Lettuce", "Iceberg Lettuce", "Arugula", "Spinach",
-    "Broccoli", "Cauliflower", "Brussels Sprouts", "Asparagus",
-    "Russet Potatoes", "Red Potatoes", "Sweet Potatoes", "Yukon Gold Potatoes",
-    "Yellow Onions", "Red Onions", "Shallots", "Green Onions",
-    "Carrots", "Baby Carrots", "Parsnips", "Turnips",
-    "Red Bell Peppers", "Green Bell Peppers", "Yellow Bell Peppers", "Jalapeno Peppers",
-    "Organic Seaweed Snacks", "Dried Seaweed Sheets", "Roasted Seaweed", "Seaweed Salad",
-    "Atlantic Salmon Fillet", "Tuna Steak", "Cod Fillet", "Tilapia Fillet",
-    "Chicken Breast", "Ground Beef", "Pork Chops", "Lamb Chops",
-    "Tofu", "Tempeh", "Seitan", "Beyond Meat Burger Patties",
-    "Cheddar Cheese", "Mozzarella Cheese", "Gouda Cheese", "Feta Cheese",
-    "Greek Yogurt", "Almond Milk", "Oat Milk", "Coconut Milk",
-    "Whole Wheat Bread", "Sourdough Bread", "Rye Bread", "Gluten-Free Bread",
-    "Pasta Sauce", "Olive Oil", "Balsamic Vinegar", "Soy Sauce",
-    "Canned Tomatoes", "Canned Beans", "Canned Tuna", "Canned Soup",
-    "Breakfast Cereal", "Oatmeal", "Granola", "Protein Bars",
-    "Coffee Beans", "Green Tea", "Black Tea", "Herbal Tea",
-    "Potato Chips", "Tortilla Chips", "Popcorn", "Pretzels",
-    "Chocolate Bar", "Candy", "Chewing Gum", "Mints",
-    "Laundry Detergent", "Dish Soap", "Hand Soap", "Paper Towels",
-    "Toilet Paper", "Tissues", "Trash Bags", "Aluminum Foil"
+    "Apel Fuji Premium", "Apel Red Delicious", "Apel Malang", "Apel Granny Smith", 
+    "Pisang Ambon", "Pisang Raja", "Pisang Kepok", "Pisang Sunpride",
+    "Jeruk Mandarin", "Jeruk Sunkist", "Jeruk Pontianak", "Jeruk Nipis",
+    "Semangka Merah", "Semangka Baby", "Semangka Kuning", "Melon Honeydew",
+    "Melon Golden", "Melon Rock", "Anggur Red Globe", "Anggur Thompson",
+    "Wortel Lokal", "Wortel Import Baby", "Brokoli Premium", "Brokoli Baby",
+    "Kentang Dieng", "Kentang Granola", "Tomat Cherry", "Tomat Beef",
+    "Cabai Keriting Merah", "Cabai Rawit Hijau", "Cabai Merah Besar",
+    "Bawang Bombay", "Bawang Merah Brebes", "Bawang Putih Kating",
+    "Bayam Hijau Organik", "Kangkung Hidroponik", "Selada Romaine",
+    "Selada Keriting", "Sawi Putih", "Sawi Hijau", "Pakcoy Premium",
+    "Daun Singkong", "Daun Pepaya", "Kemangi Segar"
 ]
 
 def generate_random_date():
@@ -59,67 +42,66 @@ def generate_random_date():
 
 def apply_discount(items):
     discounted_items = []
-    discount_count = 0
     for item in items:
-        if random.random() < 0.3 or (len(items) - len(discounted_items) <= 4 - discount_count):
+        if random.random() < 0.2:
             discount_percentage = random.choice([10, 15, 20, 25])
             original_price = item['price']
-            discounted_price = round(original_price * (1 - discount_percentage/100), 2)
-            savings = round(original_price - discounted_price, 2)
+            discounted_price = round(original_price * (1 - discount_percentage/100))
+            savings = original_price - discounted_price
             discounted_items.append({
                 **item,
                 'price': discounted_price,
-                'savings': savings,
+                'hemat': savings,
                 'original_price': original_price
             })
-            discount_count += 1
         else:
-            discounted_items.append({**item, 'savings': 0})
+            discounted_items.append({**item, 'hemat': 0})
     return discounted_items
 
-def create_receipt(store_name, items, total, payment_method, receipt_date, use_bold=False, cashier_name=None, logo=None):
+def create_receipt(store_name, items, total, payment_method, receipt_date, logo_path, use_bold=False, cashier_name=None):
     buffer = io.BytesIO()
-    width, height = 45 * mm, 210 * mm
-    c = canvas.Canvas(buffer, pagesize=(width, height))
+    width = 45 * mm
+    c = canvas.Canvas(buffer, pagesize=(width, A4[1]))
 
     font = "Calibri-Bold" if use_bold else "Calibri"
 
     left_indent = 2 * mm
     x = left_indent
-    y = height - 5 * mm
+    y = A4[1] - 5 * mm
 
-    # Draw logo
-    if logo:
-        logo_width = 10 * mm
-        logo_height = 10 * mm
-        c.drawImage(ImageReader(logo), x, y - logo_height, width=logo_width, height=logo_height)
-        x += logo_width + 2 * mm
+    logo = ImageReader(logo_path)
+    logo_width = 10 * mm
+    logo_height = 10 * mm
+    c.drawImage(logo, x, y - logo_height, width=logo_width, height=logo_height)
+
+    text_start = x + logo_width + 2 * mm
 
     c.setFont(font, 8)
-    c.drawString(x, y, store_name)
+    c.drawString(text_start, y, store_name)
     y -= 3*mm
-    c.drawString(x, y, "TIN: 12-3456789")
+    c.drawString(text_start, y, "NPWP: 00.178.137.2-604.000")
     y -= 3*mm
-    c.drawString(x, y, "Established: 01-01-2000")
+    c.drawString(text_start, y, "Tanggal Pengukuhan: 06-06-97")
     y -= 3*mm
-    c.drawString(x, y, "123 MAIN STREET")
+    c.drawString(text_start, y, "MUARA KARANG RAYA NO. 2")
     y -= 3*mm
-    c.drawString(x, y, "NEW YORK, NY 10001")
+    c.drawString(text_start, y, "JAKARTA UTARA")
     y -= 3*mm
-    c.drawString(x, y, "Tel: (555) 123-4567")
+    c.drawString(text_start, y, "Telp: 6697927")
     y -= 8*mm
 
-    x = left_indent  # Reset x to left indent
+    c.setFont(font, 8)
     c.drawString(x, y, f"{receipt_date} No: {random.randint(1000, 9999)}")
     if cashier_name:
-        c.drawString(x, y - 3*mm, f"Cashier: {cashier_name}")
+        c.drawString(x, y - 3*mm, f"Kasir: {cashier_name}")
         y -= 3*mm
     y -= 1*mm
 
-    separator = '=' * int((width - 2*left_indent) / c.stringWidth('=', font, 8))
+    separator = '=' * int((width - 2*x) / c.stringWidth('=', font, 8))
     y -= 2*mm
 
-    c.drawString(x, y, "DESCRIPTION      QTY    PRICE")
+    c.setFont("MSGothic", 8)
+    c.drawString(x, y, "DESKRIPSI        QTY    HARGA")
     y -= 3*mm
     c.drawString(x, y, separator)
     y -= 3*mm
@@ -130,15 +112,15 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, use_b
         price = item['price']
         item_total = price * quantity
         
-        item_text = f"{name:<15} {quantity:>3} ${item_total:>6.2f}"
+        item_text = f"{name:<15} {quantity:>3} {item_total:>8,.0f}"
         c.drawString(x, y, item_text)
         y -= 3*mm
         
-        if item.get('savings', 0) > 0:
+        if item.get('hemat', 0) > 0:
             original_price = item.get('original_price', price)
-            savings_text = f"SAVE: ${item['savings']:.2f}"
+            hemat_text = f"HEMAT: {item['hemat']:,.0f}"
             c.setFillColorRGB(1, 0, 0)
-            c.drawString(x + 2*mm, y, savings_text)
+            c.drawString(x + 2*mm, y, hemat_text)
             c.setFillColorRGB(0, 0, 0)
             y -= 3*mm
 
@@ -146,31 +128,32 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, use_b
     c.drawString(x, y, separator)
     y -= 3*mm
 
-    tax = total * 0.08
-    total_with_tax = total + tax
+    ppn = total * 0.11
+    total_with_ppn = total + ppn
 
-    c.drawString(x, y, f"Subtotal: ${total:.2f}")
+    c.drawString(x, y, f"Sub Total: {total:,.0f}")
     y -= 3*mm
-    c.drawString(x, y, f"Tax (8%): ${tax:.2f}")
+    c.drawString(x, y, f"PPN (11%): {ppn:,.0f}")
     y -= 3*mm
-    c.drawString(x, y, f"Total (Including Tax): ${total_with_tax:.2f}")
+    c.drawString(x, y, f"Total (Termasuk PPN): {total_with_ppn:,.0f}")
     y -= 3*mm
-    c.drawString(x, y, f"Payment - {payment_method}: ${total_with_tax:.2f}")
+    c.drawString(x, y, f"Pembayaran - {payment_method}: {total_with_ppn:,.0f}")
     y -= 3*mm
-    c.drawString(x, y, f"Number: T{random.randint(100000000, 999999999)}")
+    c.drawString(x, y, f"Nomor: B{random.randint(100000000, 999999999)}")
     y -= 4*mm
 
-    c.drawString(x, y, f"Total Items: {len(items)}")
+    c.drawString(x, y, f"Total Item: {len(items)}")
     y -= 4*mm
 
+    c.setFont(font, 8)
     footer_lines = [
-        "**Thank you for shopping with us**",
-        "YOUR FEEDBACK IS OUR PRIORITY",
-        "TOLL-FREE: 1-800-123-4567",
-        "WHATSAPP: +1 (555) 987-6543 (CALL ONLY)",
-        "MONDAY - FRIDAY 8:00 AM - 5:00 PM EST",
-        "Email: customer.service@freshmarket.com",
-        "www.freshmarket.com"
+        "**Terima kasih**",
+        "SARAN ANDA KEPUASAN KAMI",
+        "TELP BEBAS PULSA: 0800 1403 210",
+        "WHATSAPP: 081213137035 (CALL ONLY)",
+        "SENIN - JUMAT 08:00 - 17:00 WIB",
+        "Email: cs@superindo.co.id",
+        "www.superindo.co.id"
     ]
 
     for line in footer_lines:
@@ -184,18 +167,16 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, use_b
     return buffer
 
 def generate_random_items():
-    num_items = random.randint(10, 15)
+    num_items = random.randint(19, 22)
     items = []
     selected_items = random.sample(ITEMS, num_items)
 
     for item in selected_items:
-        quantity = random.randint(1, 3)
-        if "Organic" in item or "Premium" in item or "Fillet" in item or "Chops" in item:
-            price = round(random.uniform(5.99, 15.99), 2)
-        elif "Detergent" in item or "Soap" in item or "Paper" in item or "Trash" in item or "Foil" in item:
-            price = round(random.uniform(3.99, 9.99), 2)
+        quantity = random.randint(1, 5)
+        if "Premium" in item:
+            price = random.randint(3500, 12900)
         else:
-            price = round(random.uniform(1.50, 4.99), 2)
+            price = random.randint(1500, 4900)
         
         items.append({
             "name": item,
@@ -205,14 +186,14 @@ def generate_random_items():
 
     return apply_discount(items)
 
-def generate_random_receipts(num_receipts, store_name, use_bold, logo):
+def generate_random_receipts(num_receipts, store_name, logo_path, use_bold):
     receipts = []
     for _ in range(num_receipts):
         items = generate_random_items()
         receipt_date = generate_random_date()
         cashier = random.choice(CASHIERS)
         subtotal = sum(item['quantity'] * item['price'] for item in items)
-        payment_method = random.choice(["VISA", "MASTERCARD", "AMEX", "APPLE PAY", "GOOGLE PAY", "CASH"])
+        payment_method = random.choice(["BNI QRIS", "MANDIRI", "BCA", "OVO", "GOPAY", "CASH"])
         
         pdf_buffer = create_receipt(
             store_name,
@@ -220,9 +201,9 @@ def generate_random_receipts(num_receipts, store_name, use_bold, logo):
             subtotal,
             payment_method,
             receipt_date,
+            logo_path,
             use_bold,
-            cashier,
-            logo
+            cashier
         )
         
         receipts.append({
@@ -230,7 +211,7 @@ def generate_random_receipts(num_receipts, store_name, use_bold, logo):
             'date': receipt_date,
             'cashier': cashier,
             'items': items,
-            'total': subtotal + (subtotal * 0.08),
+            'total': subtotal + (subtotal * 0.11),
             'payment_method': payment_method
         })
 
@@ -251,7 +232,7 @@ def create_zip_file(receipts):
             summary += f"Date: {receipt['date']}\n"
             summary += f"Cashier: {receipt['cashier']}\n"
             summary += f"Payment Method: {receipt['payment_method']}\n"
-            summary += f"Total: ${receipt['total']:.2f}\n"
+            summary += f"Total: Rp {receipt['total']:,.2f}\n"
             summary += f"Items: {len(receipt['items'])}\n\n"
         
         zip_file.writestr("summary.txt", summary)
@@ -259,45 +240,37 @@ def create_zip_file(receipts):
     zip_buffer.seek(0)
     return zip_buffer
 
-st.title("Receipt Generator")
+st.title("收据生成器")
 
-mode = st.radio("Select Mode", ["Manual", "Automatic"])
-use_bold = st.checkbox("Use Bold Text", value=True)
-store_name = st.text_input("Store Name:", "FRESH MARKET")
-
-# Logo upload
-uploaded_logo = st.file_uploader("Upload store logo (optional)", type=["png", "jpg", "jpeg"])
-if uploaded_logo:
-    logo = Image.open(uploaded_logo)
+mode = st.radio("选择模式", ["手动", "自动"])
+use_bold = st.checkbox("使用粗体文本", value=True)
+store_name = st.text_input("商店名称:", "PT LION SUPERINDO")
+uploaded_logo = st.file_uploader("上传您的商店标志", type=["png", "jpg", "jpeg"])
+if uploaded_logo is not None:
+    logo_path = "temp_logo.png"
+    with open(logo_path, "wb") as f:
+        f.write(uploaded_logo.getbuffer())
 else:
-    # Create a default logo
-    logo = Image.new('RGB', (100, 100), color='green')
-    pixels = logo.load()
-    for i in range(logo.size[0]):
-        for j in range(logo.size[1]):
-            if (i + j) % 2 == 0:
-                pixels[i, j] = (255, 255, 255)
+    logo_path = "default_logo.png"
 
 if 'items' not in st.session_state:
     st.session_state['items'] = []
 if 'cashier' not in st.session_state:
     st.session_state['cashier'] = random.choice(CASHIERS)
 
-if mode == "Manual":
-    st.subheader("Set Shopping Items")
-    num_items = st.number_input("Number of Items:", min_value=1, value=10, step=1)
+if mode == "手动":
+    st.subheader("设置购物商品")
+    num_items = st.number_input("商品数量:", min_value=1, value=5, step=1)
 
-    if st.button("Generate Items"):
+    if st.button("生成商品"):
         st.session_state['items'] = []
         selected_items = random.sample(ITEMS, min(num_items, len(ITEMS)))
         for item in selected_items:
-            quantity = random.randint(1, 3)
-            if "Organic" in item or "Premium" in item or "Fillet" in item or "Chops" in item:
-                price = round(random.uniform(5.99, 15.99), 2)
-            elif "Detergent" in item or "Soap" in item or "Paper" in item or "Trash" in item or "Foil" in item:
-                price = round(random.uniform(3.99, 9.99), 2)
+            quantity = random.randint(1, 5)
+            if "Premium" in item:
+                price = random.randint(3500, 12900)
             else:
-                price = round(random.uniform(1.50, 4.99), 2)
+                price = random.randint(1500, 4900)
             
             st.session_state['items'].append({
                 "name": item,
@@ -308,94 +281,93 @@ if mode == "Manual":
         st.session_state['items'] = apply_discount(st.session_state['items'])
 
     if st.session_state['items']:
-        st.write("Item List:")
+        st.write("商品列表:")
         for item in st.session_state['items']:
-            if item.get('savings', 0) > 0:
-                st.write(f"{item['name']} - Quantity: {item['quantity']} - "
-                         f"Price: ${item['price']:.2f} "
-                         f"(SAVE: ${item['savings']:.2f})")
+            if item.get('hemat', 0) > 0:
+                st.write(f"{item['name']} - Jumlah: {item['quantity']} - "
+                         f"Harga: Rp {item['price']:,} "
+                         f"(HEMAT: Rp {item['hemat']:,})")
             else:
-                st.write(f"{item['name']} - Quantity: {item['quantity']} - "
-                         f"Price: ${item['price']:.2f}")
+                st.write(f"{item['name']} - Jumlah: {item['quantity']} - "
+                         f"Harga: Rp {item['price']:,}")
 
-    use_current_date = st.checkbox("Use Current Date and Time", value=False)
+    use_current_date = st.checkbox("使用当前日期和时间", value=False)
     if use_current_date:
         receipt_date = datetime.now().strftime("%y-%m-%d (%H:%M:%S)")
-        st.write(f"Selected Date: {receipt_date}")
+        st.write(f"选定日期: {receipt_date}")
     else:
         receipt_date = generate_random_date()
-        st.write(f"Randomly Generated Date: {receipt_date}")
+        st.write(f"随机生成的日期: {receipt_date}")
 
     if st.session_state['items']:
         subtotal = sum(item['quantity'] * item['price'] for item in st.session_state['items'])
-        tax = subtotal * 0.08
-        total = subtotal + tax
+        ppn = subtotal * 0.11
+        total = subtotal + ppn
 
-        st.write(f"Subtotal: ${subtotal:.2f}")
-        st.write(f"Tax (8%): ${tax:.2f}")
-        st.write(f"Total: ${total:.2f}")
+        st.write(f"小计: Rp {subtotal:,.2f}")
+        st.write(f"PPN (11%): Rp {ppn:,.2f}")
+        st.write(f"总计: Rp {total:,.2f}")
 
-        payment_methods = ["VISA", "MASTERCARD", "AMEX", "APPLE PAY", "GOOGLE PAY", "CASH"]
-        payment_method = st.selectbox("Payment Method:", payment_methods)
+        payment_methods = ["BNI QRIS", "MANDIRI", "BCA", "OVO", "GOPAY", "CASH"]
+        payment_method = st.selectbox("支付方式:", payment_methods)
 
-        if st.button("Generate Receipt"):
+        if st.button("生成  "CASH"]
+        payment_method = st.selectbox("支付方式:", payment_methods)
+
+        if st.button("生成收据"):
             pdf_buffer = create_receipt(
                 store_name,
                 st.session_state['items'],
                 subtotal,
                 payment_method,
                 receipt_date,
+                logo_path,
                 use_bold,
-                st.session_state['cashier'],
-                logo
+                st.session_state['cashier']
             )
 
             st.download_button(
-                label="Download Receipt PDF",
+                label="下载收据 PDF",
                 data=pdf_buffer,
                 file_name=f"receipt_{receipt_date.replace('/', '').replace(':', '').replace(' ', '_').replace('(', '').replace(')', '')}.pdf",
                 mime="application/pdf"
             )
 
-elif mode == "Automatic":
-    st.subheader("Generate Multiple Receipts")
+elif mode == "自动":
+    st.subheader("生成多个收据")
 
-    num_receipts = st.number_input("Number of Receipts to Generate:", min_value=1, max_value=50, value=5)
+    num_receipts = st.number_input("要生成的收据数量:", min_value=1, max_value=50, value=5)
 
-    if st.button("Generate Receipts"):
-        receipts = generate_random_receipts(num_receipts, store_name, use_bold, logo)
+    if st.button("生成收据"):
+        receipts = generate_random_receipts(num_receipts, store_name, logo_path, use_bold)
         
         zip_buffer = create_zip_file(receipts)
         
         st.download_button(
-            label="Download All Receipts (ZIP)",
+            label="下载所有收据 (ZIP)",
             data=zip_buffer,
-            file_name="fresh_market_receipts.zip",
+            file_name="superindo_receipts.zip",
             mime="application/zip"
         )
 
-        st.subheader("Receipts Summary:")
+        st.subheader("收据摘要:")
         total_sales = 0
         for i, receipt in enumerate(receipts, 1):
-            st.write(f"Receipt {i}:")
-            st.write(f"Date: {receipt['date']}")
-            st.write(f"Cashier: {receipt['cashier']}")
-            st.write(f"Payment Method: {receipt['payment_method']}")
-            st.write(f"Total: ${receipt['total']:.2f}")
-            st.write(f"Items: {len(receipt['items'])}")
+            st.write(f"收据 {i}:")
+            st.write(f"日期: {receipt['date']}")
+            st.write(f"收银员: {receipt['cashier']}")
+            st.write(f"支付方式: {receipt['payment_method']}")
+            st.write(f"总计: Rp {receipt['total']:,.2f}")
+            st.write(f"商品数量: {len(receipt['items'])}")
             st.write("---")
             total_sales += receipt['total']
         
-        st.write(f"Total Sales: ${total_sales:.2f}")
-        st.write(f"Average per Receipt: ${(total_sales/num_receipts):.2f}")
-
-if st.button("Again"):
-    st.session_state['items'] = []
-    st.session_state['cashier'] = random.choice(CASHIERS)
-    st.rerun()
+        st.write(f"总销售额: Rp {total_sales:,.2f}")
+        st.write(f"每张收据平均: Rp {(total_sales/num_receipts):,.2f}")
 
 st.markdown("---")
-st.markdown("### About the App")
-st.write("This application is used to generate Fresh Market shopping receipts.")
-st.write("Choose manual mode to set receipt details or automatic mode to generate multiple receipts at once.")
-st.write("© 2024 Receipt Generator")
+st.markdown("### 关于应用")
+st.write("此应用程序用于生成 Superindo 购物收据。")
+st.write("选择手动模式以设置收据详细信息，或选择自动模式以一次生成多个收据。")
+st.write("© 2024 收据生成器")
+
