@@ -297,7 +297,7 @@ if mode == "Manual":
             elif "Detergent" in item or "Soap" in item or "Paper" in item or "Trash" in item or "Foil" in item:
                 price = round(random.uniform(3.99, 9.99), 2)
             else:
-                price = round(random.uniform(1.50, 4.99), 9.99), 2)
+                price = round(random.uniform(1.50, 4.99, 9.99), 2)
             else:
                 price = round(random.uniform(1.50, 4.99), 2)
             
