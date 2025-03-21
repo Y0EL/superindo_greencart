@@ -43,7 +43,7 @@ def generate_random_date():
 def apply_discount(items):
     discounted_items = []
     for item in items:
-        if random.random() < 0.2:
+        if random.random() < 0.6:
             discount_percentage = random.choice([10, 15, 20, 25])
             original_price = item['price']
             discounted_price = round(original_price * (1 - discount_percentage/100))
@@ -60,7 +60,7 @@ def apply_discount(items):
 
 def create_receipt(store_name, items, total, payment_method, receipt_date, logo_path, use_bold=False, cashier_name=None):
     buffer = io.BytesIO()
-    width, height = 45 * mm, 210 * mm
+    width, height = 80 * mm, 374 * mm
     c = canvas.Canvas(buffer, pagesize=(width, height))
 
     font = "Calibri-Bold" if use_bold else "Calibri"
@@ -70,13 +70,13 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     y = height - 5 * mm
 
     logo = ImageReader(logo_path)
-    logo_width = 10 * mm
-    logo_height = 10 * mm
+    logo_width = 14 * mm
+    logo_height = 14 * mm
     c.drawImage(logo, x, y - logo_height, width=logo_width, height=logo_height)
 
     text_start = x + logo_width + 2 * mm
 
-    c.setFont(font, 8)
+    c.setFont(font, 9)
     c.drawString(text_start, y, store_name)
     y -= 3*mm
     c.drawString(text_start, y, "NPWP: 00.178.137.2-604.000")
@@ -90,29 +90,29 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     c.drawString(text_start, y, "Telp: 6697927")
     y -= 8*mm
 
-    c.setFont(font, 8)
+    c.setFont(font, 9)
     c.drawString(x, y, f"{receipt_date} No: {random.randint(1000, 9999)}")
     if cashier_name:
         c.drawString(x, y - 3*mm, f"Kasir: {cashier_name}")
         y -= 3*mm
     y -= 1*mm
 
-    separator = '=' * int((width - 2*x) / c.stringWidth('=', font, 8))
+    separator = '=' * int((width - 2*x) / c.stringWidth('=', font, 9))
     y -= 2*mm
 
-    c.setFont("MSGothic", 8)
-    c.drawString(x, y, "DESKRIPSI        QTY    HARGA")
+    c.setFont("MSGothic", 9)
+    c.drawString(x, y, "DESKRIPSI               QTY     HARGA      TOTAL")
     y -= 3*mm
     c.drawString(x, y, separator)
     y -= 3*mm
 
     for item in items:
-        name = item['name'][:15]
+        name = item['name'][:22]
         quantity = item['quantity']
         price = item['price']
         item_total = price * quantity
         
-        item_text = f"{name:<15} {quantity:>3} {item_total:>8,.0f}"
+        item_text = f"{name:<22} {quantity:>3}    {price:>8,.0f} {item_total:>9,.0f}"
         c.drawString(x, y, item_text)
         y -= 3*mm
         
@@ -145,7 +145,7 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     c.drawString(x, y, f"Total Item: {len(items)}")
     y -= 4*mm
 
-    c.setFont(font, 8)
+    c.setFont(font, 9)
     footer_lines = [
         "**Terima kasih**",
         "SARAN ANDA KEPUASAN KAMI",
@@ -157,7 +157,7 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     ]
 
     for line in footer_lines:
-        text_width = c.stringWidth(line, font, 8)
+        text_width = c.stringWidth(line, font, 9)
         c.drawString((width - text_width) / 2, y, line)
         y -= 3*mm
 
