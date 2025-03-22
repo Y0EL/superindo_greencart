@@ -60,7 +60,7 @@ def apply_discount(items):
 
 def create_receipt(store_name, items, total, payment_method, receipt_date, logo_path, use_bold=False, cashier_name=None):
     buffer = io.BytesIO()
-    width, height = 80 * mm, 374 * mm
+    width, height = 72 * mm, 336 * mm
     c = canvas.Canvas(buffer, pagesize=(width, height))
 
     font = "Calibri-Bold" if use_bold else "Calibri"
@@ -70,8 +70,8 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     y = height - 5 * mm
 
     logo = ImageReader(logo_path)
-    logo_width = 14 * mm
-    logo_height = 14 * mm
+    logo_width = 12 * mm
+    logo_height = 12 * mm
     c.drawImage(logo, x, y - logo_height, width=logo_width, height=logo_height)
 
     text_start = x + logo_width + 2 * mm
@@ -101,18 +101,18 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     y -= 2*mm
 
     c.setFont("MSGothic", 9)
-    c.drawString(x, y, "DESKRIPSI               QTY     HARGA      TOTAL")
+    c.drawString(x, y, "DESKRIPSI            QTY     HARGA     TOTAL")
     y -= 3*mm
     c.drawString(x, y, separator)
     y -= 3*mm
 
     for item in items:
-        name = item['name'][:22]
+        name = item['name'][:19]
         quantity = item['quantity']
         price = item['price']
         item_total = price * quantity
         
-        item_text = f"{name:<22} {quantity:>3}    {price:>8,.0f} {item_total:>9,.0f}"
+        item_text = f"{name:<19} {quantity:>3}    {price:>7,.0f} {item_total:>8,.0f}"
         c.drawString(x, y, item_text)
         y -= 3*mm
         
