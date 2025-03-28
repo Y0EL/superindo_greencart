@@ -6,16 +6,16 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 import textwrap
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 import random
 from datetime import datetime, timedelta
 from reportlab.lib.utils import ImageReader
 import zipfile
+import os
 
-pdfmetrics.registerFont(TTFont('Calibri', 'Calibri.ttf'))
-pdfmetrics.registerFont(TTFont('MSGothic', 'msgothic.ttc'))
-pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
+# Using built-in fonts
+REGULAR_FONT = 'Helvetica'
+BOLD_FONT = 'Helvetica-Bold'
+MONO_FONT = 'Courier'
 
 CASHIERS = ["Raymond", "Sofi", "Derren", "Jack", "Jackuavis", "Septian", "Joel", "Dgueby", "Gerald", "Sintia", "Chia", "Defi"]
 
@@ -33,6 +33,8 @@ ITEMS = [
     "Selada Keriting", "Sawi Putih", "Sawi Hijau", "Pakcoy Premium",
     "Daun Singkong", "Daun Pepaya", "Kemangi Segar"
 ]
+
+
 
 def generate_random_date():
     days_ago = random.randint(0, 7)
@@ -58,110 +60,126 @@ def apply_discount(items):
             discounted_items.append({**item, 'hemat': 0})
     return discounted_items
 
-def create_receipt(store_name, items, total, payment_method, receipt_date, logo_path, use_bold=False, cashier_name=None):
+def create_receipt(store_name, items, subtotal, payment_method, receipt_date, logo_path, use_bold, cashier):
     buffer = io.BytesIO()
-    width, height = 72 * mm, 336 * mm
-    c = canvas.Canvas(buffer, pagesize=(width, height))
-
-    font = "Calibri-Bold" if use_bold else "Calibri"
-
-    left_indent = 2 * mm
-    x = left_indent
-    y = height - 5 * mm
-
+    c = canvas.Canvas(buffer, pagesize=(80*mm, 297*mm))
+    
+    # Set transparency for header company info
+    c.saveState()
+    c.setFillAlpha(0.5)
+    c.setFont(REGULAR_FONT, 7)
+    
+    # Header with minimal spacing
+    y = 280
+    spacing = 3
+    c.drawString(5*mm, y*mm, "PT INDOMARCO PRISMATAMA")
+    y -= spacing
+    c.drawString(5*mm, y*mm, "GEDUNG MENARA INDOMARET")
+    y -= spacing
+    c.drawString(5*mm, y*mm, "BOULEVARD PANTAI INDAH KAPUK")
+    y -= spacing
+    c.drawString(5*mm, y*mm, "JAKARTA UTARA")
+    y -= spacing
+    c.drawString(5*mm, y*mm, "NPWP: 001 387 994 6-092 000")
+    c.restoreState()
+    
+    # Draw logo on the right side
+    y = 280
+    spacing = 3
     logo = ImageReader(logo_path)
-    logo_width = 12 * mm
-    logo_height = 12 * mm
-    c.drawImage(logo, x, y - logo_height, width=logo_width, height=logo_height)
+    c.drawImage(logo, 53*mm, 271*mm, width=24*mm, height=12*mm)
+ 
 
-    text_start = x + logo_width + 2 * mm
-
-    c.setFont(font, 9)
-    c.drawString(text_start, y, store_name)
-    y -= 3*mm
-    c.drawString(text_start, y, "NPWP: 00.178.137.2-604.000")
-    y -= 3*mm
-    c.drawString(text_start, y, "Tanggal Pengukuhan: 06-06-97")
-    y -= 3*mm
-    c.drawString(text_start, y, "MUARA KARANG RAYA NO. 2")
-    y -= 3*mm
-    c.drawString(text_start, y, "JAKARTA UTARA")
-    y -= 3*mm
-    c.drawString(text_start, y, "Telp: 6697927")
-    y -= 8*mm
-
-    c.setFont(font, 9)
-    c.drawString(x, y, f"{receipt_date} No: {random.randint(1000, 9999)}")
-    if cashier_name:
-        c.drawString(x, y - 3*mm, f"Kasir: {cashier_name}")
-        y -= 3*mm
-    y -= 1*mm
-
-    separator = '=' * int((width - 2*x) / c.stringWidth('=', font, 9))
-    y -= 2*mm
-
-    c.setFont("MSGothic", 9)
-    c.drawString(x, y, "DESKRIPSI            QTY     HARGA     TOTAL")
-    y -= 3*mm
-    c.drawString(x, y, separator)
-    y -= 3*mm
-
+    # Store info (without spacing)
+    c.setFont(MONO_FONT, 9)
+    y = 260
+    store_text = "FRESH BOUTIQUE PIK"
+    text_width = c.stringWidth(store_text, MONO_FONT, 9)
+    x = (80*mm - text_width) / 2
+    c.drawString(x, y*mm, store_text)
+    
+    y -= spacing
+    c.drawString(5*mm, y*mm, "JL. PANTAI MAJU BERSAMA KAMAL MUARA")
+    y -= spacing
+    c.drawString(5*mm, y*mm, "PENJARINGAN JAKARTA UTARA, 14470")
+    
+    # Separator
+    c.setFont(MONO_FONT, 8)
+    y -= spacing
+    c.drawString(5*mm, y*mm, "-" * 42)
+    
+    # Transaction info with random components
+    random_digit1 = random.randint(0, 9)
+    random_digit2 = random.randint(0, 9)
+    random_alphanum = ''.join(random.choices('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', k=4))
+    random_5digits = ''.join(random.choices('0123456789', k=5))
+    random_2digits = ''.join(random.choices('0123456789', k=2))
+    
+    current_datetime = datetime.now()
+    transaction_info = (
+        f"{current_datetime.strftime('%d/%m/%Y %H:%M')} "
+        f"{random_digit1}/{random_digit2}/{current_datetime.strftime('%y')}/"
+        f"{random_alphanum}-{random_5digits}/{cashier}/{random_2digits}"
+    )
+    y -= spacing
+    c.drawString(5*mm, y*mm, transaction_info)
+    
+    # Second separator
+    y -= spacing
+    c.drawString(5*mm, y*mm, "-" * 42)
+    
+    # Items
+    y = 245
+    total_hemat = 0
     for item in items:
-        name = item['name'][:19]
-        quantity = item['quantity']
-        price = item['price']
-        item_total = price * quantity
-        
-        item_text = f"{name:<19} {quantity:>3}    {price:>7,.0f} {item_total:>8,.0f}"
-        c.drawString(x, y, item_text)
-        y -= 3*mm
-        
-        if item.get('hemat', 0) > 0:
-            original_price = item.get('original_price', price)
-            hemat_text = f"HEMAT: {item['hemat']:,.0f}"
-            c.setFillColorRGB(1, 0, 0)
-            c.drawString(x + 2*mm, y, hemat_text)
-            c.setFillColorRGB(0, 0, 0)
-            y -= 3*mm
+        item_total = item['quantity'] * item['price']
+        c.drawString(5*mm, y*mm, f"{item['name'][:24]}")
+        c.drawString(5*mm, (y-4)*mm, f"{item['quantity']} {item['price']:,} {item_total:,}")
+        if 'hemat' in item and item['hemat'] > 0:
+            total_hemat += item['hemat']
+            c.drawString(50*mm, (y-4)*mm, f"DISKON: ({item['hemat']:,})")
+        y -= 8
+    
+    # Totals
+    y -= spacing
+    c.drawString(5*mm, y*mm, "-" * 42)
 
-    y -= 1*mm
-    c.drawString(x, y, separator)
-    y -= 3*mm
-
-    ppn = total * 0.11
-    total_with_ppn = total + ppn
-
-    c.drawString(x, y, f"Sub Total: {total:,.0f}")
-    y -= 3*mm
-    c.drawString(x, y, f"PPN (11%): {ppn:,.0f}")
-    y -= 3*mm
-    c.drawString(x, y, f"Total (Termasuk PPN): {total_with_ppn:,.0f}")
-    y -= 3*mm
-    c.drawString(x, y, f"Pembayaran - {payment_method}: {total_with_ppn:,.0f}")
-    y -= 3*mm
-    c.drawString(x, y, f"Nomor: B{random.randint(100000000, 999999999)}")
-    y -= 4*mm
-
-    c.drawString(x, y, f"Total Item: {len(items)}")
-    y -= 4*mm
-
-    c.setFont(font, 9)
-    footer_lines = [
-        "**Terima kasih**",
-        "SARAN ANDA KEPUASAN KAMI",
-        "TELP BEBAS PULSA: 0800 1403 210",
-        "WHATSAPP: 081213137035 (CALL ONLY)",
-        "SENIN - JUMAT 08:00 - 17:00 WIB",
-        "Email: cs@superindo.co.id",
-        "www.superindo.co.id"
-    ]
-
-    for line in footer_lines:
-        text_width = c.stringWidth(line, font, 9)
-        c.drawString((width - text_width) / 2, y, line)
-        y -= 3*mm
-
-    c.showPage()
+    c.drawString(5*mm, (y-4)*mm, "HARGA JUAL :".ljust(20) + f"{subtotal:,}")
+    y -= spacing
+    c.drawString(5*mm, (y-5)*mm, "-" * 42)
+    c.drawString(5*mm, (y-8)*mm, "TOTAL :".ljust(20) + f"{subtotal:,}")
+    
+    if payment_method != "CASH":
+        c.drawString(5*mm, (y-12)*mm, "NON TUNAI :".ljust(20) + f"{subtotal:,}")
+    
+    if total_hemat > 0:
+        c.drawString(5*mm, (y-16)*mm, "ANDA HEMAT :".ljust(20) + f"{total_hemat:,}")
+    
+    # Tax information
+    ppn_base = round(subtotal / 1.11)
+    ppn = subtotal - ppn_base
+    c.drawString(5*mm, (y-24)*mm, f"PPN : DPP= {ppn_base:,} PPN= {ppn:,}")
+    c.drawString(5*mm, (y-28)*mm, f"PJK RST.: DPP= {ppn_base*2:,} PJK= {ppn*2:,}")
+    
+    # Payment info
+    if payment_method != "CASH":
+        c.drawString(5*mm, (y-32)*mm, f"QR {payment_method}-TRXID:{datetime.now().strftime('%Y%m%d%H%M%S')}")
+        c.drawString(5*mm, (y-36)*mm, f"NO:{'*'*20}AAAG,PURCHASE:{subtotal:,}")
+    
+    # Footer
+    c.setFont(REGULAR_FONT, 7)
+    c.drawString(5*mm, (y-44)*mm, "LAYANAN KONSUMEN")
+    y -= spacing
+    c.drawString(5*mm, (y-44.5)*mm, "SMS/WA 08111500280 TELP 1500280")
+    y -= spacing
+    c.drawString(5*mm, (y-45)*mm, "KONTAK@INDOMARET.CO.ID")
+    y -= spacing 
+    c.drawString(5*mm, (y-45.5)*mm, "BELANJA LEBIH MUDAH DI")
+    y -= spacing
+    c.drawString(5*mm, (y-46)*mm, "KLIKINDOMARET")
+    y -= spacing
+    c.drawString(5*mm, (y-46.5)*mm, "GRATIS ONGKIR 1 JAM SAMPAI")
+    y -= spacing   
     c.save()
     buffer.seek(0)
     return buffer
