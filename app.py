@@ -29,7 +29,88 @@ ITEMS = [
 "WORTEL ORG", "KENTANG ORG", "TOMAT ORG", "BROKOLI ORG", "SELADA ORG", "KNGKUNG ORG", "SAWI ORG"
 ]
 
+# Company information options
+COMPANY_INFO = [
+    {
+        "name": "PT SUPERINDO JAYA PRIMA",
+        "address1": "GEDUNG GRAHA SUPER",
+        "address2": "JL. ANCOL BARAT BLOK A",
+        "address3": "JAKARTA UTARA",
+        "tax_id": "NPWP: 021 458 932 7-092 000"
+    },
+    {
+        "name": "PT MAJU BERSAMA SUKSES",
+        "address1": "GEDUNG MENARA MAJU",
+        "address2": "JL. GATOT SUBROTO KAV 12",
+        "address3": "JAKARTA SELATAN",
+        "tax_id": "NPWP: 085 392 647 1-073 000"
+    },
+    {
+        "name": "PT BERKAH SWALAYAN NUSANTARA",
+        "address1": "GEDUNG NUSANTARA TOWER",
+        "address2": "JL. SUDIRMAN KAV 54-55",
+        "address3": "JAKARTA PUSAT",
+        "tax_id": "NPWP: 091 475 621 3-082 000"
+    },
+    {
+        "name": "PT INDO RETAIL MAKMUR",
+        "address1": "MENARA INDAH KAPUK LT 12",
+        "address2": "JL. BOULEVARD TIMUR",
+        "address3": "TANGERANG",
+        "tax_id": "NPWP: 073 182 495 8-065 000"
+    },
+    {
+        "name": "PT SENTOSA NIAGA SEJAHTERA",
+        "address1": "GEDUNG SENTOSA PLAZA",
+        "address2": "JL. PLUIT SAKTI RAYA No.28",
+        "address3": "JAKARTA UTARA",
+        "tax_id": "NPWP: 062 549 871 3-074 000"
+    }
+]
 
+# Footer information options
+FOOTER_INFO = [
+    {
+        "line1": "LAYANAN PELANGGAN",
+        "line2": "SMS/WA 08119876543 TELP 1500123", 
+        "line3": "INFO@SUPERINDO.CO.ID",
+        "line4": "BELANJA ONLINE DI",
+        "line5": "SUPERSHOPONLINE",
+        "line6": "GRATIS ONGKIR MIN. BELANJA 100RB"
+    },
+    {
+        "line1": "CUSTOMER SERVICE",
+        "line2": "SMS/WA 08112345678 CALL 14045", 
+        "line3": "HELP@GROSIR.CO.ID",
+        "line4": "DOWNLOAD APLIKASI KAMI",
+        "line5": "GROSIR ONLINE",
+        "line6": "POIN 2X LIPAT SETIAP JUMAT"
+    },
+    {
+        "line1": "PUSAT BANTUAN",
+        "line2": "WA 08123456789 CALL 1500456", 
+        "line3": "CARE@FRESHMART.COM",
+        "line4": "TEMUKAN KAMI DI",
+        "line5": "WWW.FRESHMART.COM",
+        "line6": "DISKON 10% UNTUK MEMBER"
+    },
+    {
+        "line1": "HUBUNGI KAMI",
+        "line2": "TELP 021-5437890 HP 081234567", 
+        "line3": "SUPPORT@EASYMART.ID",
+        "line4": "BELANJA LEBIH MUDAH DI",
+        "line5": "APLIKASI EASYMART",
+        "line6": "PENGIRIMAN CEPAT AREA JABODETABEK"
+    },
+    {
+        "line1": "BANTUAN PELANGGAN",
+        "line2": "SMS/WA 08567891234 CALL 14789", 
+        "line3": "SERVICE@FAMILYMART.COM",
+        "line4": "PROMO MENARIK DI",
+        "line5": "FAMILYMART APP",
+        "line6": "PROGRAM TUKAR POIN DI KASIR"
+    }
+]
 
 def generate_random_date():
     days_ago = random.randint(0, 7)
@@ -59,6 +140,10 @@ def create_receipt(store_name, items, subtotal, payment_method, receipt_date, lo
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=(80*mm, 297*mm))
     
+    # Randomly select company info and footer info
+    company_info = random.choice(COMPANY_INFO)
+    footer_info = random.choice(FOOTER_INFO)
+    
     # Set transparency for header company info
     c.saveState()
     c.setFillAlpha(0.5)
@@ -67,23 +152,30 @@ def create_receipt(store_name, items, subtotal, payment_method, receipt_date, lo
     # Header with minimal spacing
     y = 280
     spacing = 3
-    c.drawString(5*mm, y*mm, "PT INDOMARCO PRISMATAMA")
+    c.drawString(5*mm, y*mm, company_info["name"])
     y -= spacing
-    c.drawString(5*mm, y*mm, "GEDUNG MENARA INDOMARET")
+    c.drawString(5*mm, y*mm, company_info["address1"])
     y -= spacing
-    c.drawString(5*mm, y*mm, "BOULEVARD PANTAI INDAH KAPUK")
+    c.drawString(5*mm, y*mm, company_info["address2"])
     y -= spacing
-    c.drawString(5*mm, y*mm, "JAKARTA UTARA")
+    c.drawString(5*mm, y*mm, company_info["address3"])
     y -= spacing
-    c.drawString(5*mm, y*mm, "NPWP: 001 387 994 6-092 000")
+    c.drawString(5*mm, y*mm, company_info["tax_id"])
     c.restoreState()
     
-    # Draw logo on the right side
+    # Draw logo on the right side with different aspect ratios based on logo number
     y = 280
     spacing = 3
     logo = ImageReader(logo_path)
-    c.drawImage(logo, 53*mm, 271*mm, width=24*mm, height=12*mm)
- 
+    
+    # Set different dimensions based on logo file
+    if logo_path == "logo1.png" or logo_path == "logo2.png":
+        # Square aspect ratio (1:1)
+        c.drawImage(logo, 58*mm, 271*mm, width=15*mm, height=15*mm)
+    else:
+        # Standard rectangle aspect ratio
+        c.drawImage(logo, 53*mm, 271*mm, width=24*mm, height=12*mm)
+
 
     # Store info (without spacing)
     c.setFont(MONO_FONT, 9)
@@ -123,17 +215,28 @@ def create_receipt(store_name, items, subtotal, payment_method, receipt_date, lo
     y -= spacing
     c.drawString(5*mm, y*mm, "-" * 42)
     
-    # Items
+    # Items - Modified layout to show quantity and price on same line as item name
     y = 242
     total_hemat = 0
     for item in items:
         item_total = item['quantity'] * item['price']
-        c.drawString(5*mm, y*mm, f"{item['name'][:24]}")
-        c.drawString(5*mm, (y-4)*mm, f"{item['quantity']} {item['price']:,} {item_total:,}")
+        # Format item details on one line: NAME       QTY PRICE TOTAL
+        item_name = item['name'][:18]  # Shortened to make room for price info
+        qty_price_total = f"{item['quantity']} x {item['price']:,} = {item_total:,}"
+        
+        # Draw the item name on the left
+        c.drawString(5*mm, y*mm, item_name)
+        
+        # Draw quantity, price and total on the right side of the same line
+        c.drawRightString(70*mm, y*mm, qty_price_total)
+        
+        # Add discount line if applicable
         if 'hemat' in item and item['hemat'] > 0:
             total_hemat += item['hemat']
-            c.drawString(50*mm, (y-4)*mm, f"DISKON: ({item['hemat']:,})")
-        y -= 8
+            y -= 4
+            c.drawString(15*mm, y*mm, f"DISKON: ({item['hemat']:,})")
+        
+        y -= 6  # Reduce spacing between items
     
     # Totals
     y -= spacing
@@ -159,21 +262,23 @@ def create_receipt(store_name, items, subtotal, payment_method, receipt_date, lo
     # Payment info
     if payment_method != "CASH":
         c.drawString(5*mm, (y-32)*mm, f"QR {payment_method}-TRXID:{datetime.now().strftime('%Y%m%d%H%M%S')}")
-        c.drawString(5*mm, (y-36)*mm, f"NO:{'*'*20}AAAG,PURCHASE:{subtotal:,}")
+        # Generate 4 random uppercase letters instead of fixed AAAG
+        random_4letters = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ', k=4))
+        c.drawString(5*mm, (y-36)*mm, f"NO:{'*'*20}{random_4letters},PURCHASE:{subtotal:,}")
     
     # Footer
     c.setFont(REGULAR_FONT, 7)
-    c.drawString(5*mm, (y-44)*mm, "LAYANAN KONSUMEN")
+    c.drawString(5*mm, (y-44)*mm, footer_info["line1"])
     y -= spacing
-    c.drawString(5*mm, (y-44.5)*mm, "SMS/WA 08111500280 TELP 1500280")
+    c.drawString(5*mm, (y-44.5)*mm, footer_info["line2"])
     y -= spacing
-    c.drawString(5*mm, (y-45)*mm, "KONTAK@INDOMARET.CO.ID")
+    c.drawString(5*mm, (y-45)*mm, footer_info["line3"])
     y -= spacing 
-    c.drawString(5*mm, (y-45.5)*mm, "BELANJA LEBIH MUDAH DI")
+    c.drawString(5*mm, (y-45.5)*mm, footer_info["line4"])
     y -= spacing
-    c.drawString(5*mm, (y-46)*mm, "KLIKINDOMARET")
+    c.drawString(5*mm, (y-46)*mm, footer_info["line5"])
     y -= spacing
-    c.drawString(5*mm, (y-46.5)*mm, "GRATIS ONGKIR 1 JAM SAMPAI")
+    c.drawString(5*mm, (y-46.5)*mm, footer_info["line6"])
     y -= spacing   
     c.save()
     buffer.seek(0)
@@ -199,7 +304,12 @@ def generate_random_items():
 
     return apply_discount(items)
 
-def generate_random_receipts(num_receipts, store_name, logo_path, use_bold):
+def get_random_logo():
+    # Randomly select a logo from logo1.png to logo5.png
+    logo_number = random.randint(1, 5)
+    return f"logo{logo_number}.png"
+
+def generate_random_receipts(num_receipts, store_name, use_bold):
     receipts = []
     for _ in range(num_receipts):
         items = generate_random_items()
@@ -207,6 +317,9 @@ def generate_random_receipts(num_receipts, store_name, logo_path, use_bold):
         cashier = random.choice(CASHIERS)
         subtotal = sum(item['quantity'] * item['price'] for item in items)
         payment_method = random.choice(["BNI QRIS", "MANDIRI", "BCA", "OVO", "GOPAY", "CASH"])
+        
+        # Get random logo for each receipt
+        logo_path = get_random_logo()
         
         pdf_buffer = create_receipt(
             store_name,
@@ -225,7 +338,8 @@ def generate_random_receipts(num_receipts, store_name, logo_path, use_bold):
             'cashier': cashier,
             'items': items,
             'total': subtotal + (subtotal * 0.11),
-            'payment_method': payment_method
+            'payment_method': payment_method,
+            'logo': logo_path
         })
 
     return receipts
@@ -245,6 +359,7 @@ def create_zip_file(receipts):
             summary += f"Date: {receipt['date']}\n"
             summary += f"Cashier: {receipt['cashier']}\n"
             summary += f"Payment Method: {receipt['payment_method']}\n"
+            summary += f"Logo: {receipt['logo']}\n"
             summary += f"Total: Rp {receipt['total']:,.2f}\n"
             summary += f"Items: {len(receipt['items'])}\n\n"
         
@@ -258,13 +373,23 @@ st.title("收据生成器")
 mode = st.radio("选择模式", ["手动", "自动"])
 use_bold = st.checkbox("使用粗体文本", value=True)
 store_name = st.text_input("商店名称:", "PT LION SUPERINDO")
-uploaded_logo = st.file_uploader("上传您的商店标志", type=["png", "jpg", "jpeg"])
-if uploaded_logo is not None:
-    logo_path = "temp_logo.png"
-    with open(logo_path, "wb") as f:
-        f.write(uploaded_logo.getbuffer())
+
+# For manual mode, allow selecting a specific logo
+if mode == "手动":
+    logo_choice = st.selectbox("选择商店标志:", ["logo1.png", "logo2.png", "logo3.png", "logo4.png", "logo5.png", "自定义"])
+    if logo_choice == "自定义":
+        uploaded_logo = st.file_uploader("上传您的商店标志", type=["png", "jpg", "jpeg"])
+        if uploaded_logo is not None:
+            logo_path = "temp_logo.png"
+            with open(logo_path, "wb") as f:
+                f.write(uploaded_logo.getbuffer())
+        else:
+            logo_path = "logo1.png"
+    else:
+        logo_path = logo_choice
 else:
-    logo_path = "default_logo.png"
+    # For automatic mode, we'll use the random logo selection in generate_random_receipts
+    logo_path = None
 
 if 'items' not in st.session_state:
     st.session_state['items'] = []
@@ -349,7 +474,7 @@ elif mode == "自动":
     num_receipts = st.number_input("要生成的收据数量:", min_value=1, max_value=50, value=5)
 
     if st.button("生成收据"):
-        receipts = generate_random_receipts(num_receipts, store_name, logo_path, use_bold)
+        receipts = generate_random_receipts(num_receipts, store_name, use_bold)
         
         zip_buffer = create_zip_file(receipts)
         
@@ -367,6 +492,7 @@ elif mode == "自动":
             st.write(f"日期: {receipt['date']}")
             st.write(f"收银员: {receipt['cashier']}")
             st.write(f"支付方式: {receipt['payment_method']}")
+            st.write(f"标志: {receipt['logo']}")
             st.write(f"总计: Rp {receipt['total']:,.2f}")
             st.write(f"商品数量: {len(receipt['items'])}")
             st.write("---")
