@@ -129,7 +129,7 @@ def create_receipt(store_name, items, subtotal, payment_method, receipt_date, lo
     c.drawString(5*mm, y*mm, "-" * 42)
     
     # Items
-    y = 245
+    y = 246
     total_hemat = 0
     for item in items:
         item_total = item['quantity'] * item['price']
