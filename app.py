@@ -20,18 +20,13 @@ MONO_FONT = 'Courier'
 CASHIERS = ["Raymond", "Sofi", "Derren", "Jack", "Jackuavis", "Septian", "Joel", "Dgueby", "Gerald", "Sintia", "Chia", "Defi"]
 
 ITEMS = [
-    "Apel Fuji Premium", "Apel Red Delicious", "Apel Malang", "Apel Granny Smith", 
-    "Pisang Ambon", "Pisang Raja", "Pisang Kepok", "Pisang Sunpride",
-    "Jeruk Mandarin", "Jeruk Sunkist", "Jeruk Pontianak", "Jeruk Nipis",
-    "Semangka Merah", "Semangka Baby", "Semangka Kuning", "Melon Honeydew",
-    "Melon Golden", "Melon Rock", "Anggur Red Globe", "Anggur Thompson",
-    "Wortel Lokal", "Wortel Import Baby", "Brokoli Premium", "Brokoli Baby",
-    "Kentang Dieng", "Kentang Granola", "Tomat Cherry", "Tomat Beef",
-    "Cabai Keriting Merah", "Cabai Rawit Hijau", "Cabai Merah Besar",
-    "Bawang Bombay", "Bawang Merah Brebes", "Bawang Putih Kating",
-    "Bayam Hijau Organik", "Kangkung Hidroponik", "Selada Romaine",
-    "Selada Keriting", "Sawi Putih", "Sawi Hijau", "Pakcoy Premium",
-    "Daun Singkong", "Daun Pepaya", "Kemangi Segar"
+"APEL FJI PRM", "APEL RED DEL", "APEL MLG", "APEL GRN SMT", "PISANG AMB", "PISANG RAJ",
+"PISANG KPK", "PISANG SPRD", "JERUK MND", "JERUK SNK", "JERUK PNT", "JERUK NPS", "SEMANGKA MRH",
+"SEMANGKA BBY", "SEMANGKA KNG", "MELON HNYDW", "MELON GLD", "MELON RCK", "ANGGUR RED GLB", "ANGGUR THMP",
+"WORTEL LKL", "WORTEL IMP BBY", "BROKOLI PRM", "BROKOLI BBY", "KENTANG DNG", "KENTANG GRN", "TOMAT CHRY",
+"TOMAT BEEF", "CABAI KRT MRH", "CABAI RWT HJU", "CABAI MRH BSR", "BAWANG BMB", "BAWANG MRH BRB", "BAWANG PUT KTNG", "BYM HJU ORG", "KNGKUNG HDRPNK", "SELADA RMN", "SELADA KRT", "SAWI PTH", "SAWI HJU",
+"PKCY PRM", "DAUN SKG", "DAUN PPY", "KEMANGI SGR", "APEL ORG", "PISANG ORG", "JERUK ORG",
+"WORTEL ORG", "KENTANG ORG", "TOMAT ORG", "BROKOLI ORG", "SELADA ORG", "KNGKUNG ORG", "SAWI ORG"
 ]
 
 
@@ -129,7 +124,7 @@ def create_receipt(store_name, items, subtotal, payment_method, receipt_date, lo
     c.drawString(5*mm, y*mm, "-" * 42)
     
     # Items
-    y = 246
+    y = 242
     total_hemat = 0
     for item in items:
         item_total = item['quantity'] * item['price']
