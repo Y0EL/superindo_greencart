@@ -6,16 +6,10 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 import textwrap
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 import random
 from datetime import datetime, timedelta
 from reportlab.lib.utils import ImageReader
 import zipfile
-
-pdfmetrics.registerFont(TTFont('Calibri', 'Calibri.ttf'))
-pdfmetrics.registerFont(TTFont('MSGothic', 'msgothic.ttc'))
-pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
 
 CASHIERS = ["Raymond", "Sofi", "Derren", "Jack", "Jackuavis", "Septian", "Joel", "Dgueby", "Gerald", "Sintia", "Chia", "Defi"]
 
@@ -127,7 +121,7 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     width, height = 45 * mm, 210 * mm
     c = canvas.Canvas(buffer, pagesize=(width, height))
 
-    font = "Calibri-Bold" if use_bold else "Calibri"
+    font = "Helvetica-Bold" if use_bold else "Helvetica"
 
     left_indent = 2 * mm
     x = left_indent
@@ -164,7 +158,7 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     separator = '=' * int((width - 2*x) / c.stringWidth('=', font, 8))
     y -= 2*mm
 
-    c.setFont("MSGothic", 8)
+    c.setFont("Helvetica", 8)
     c.drawString(x, y, "DESKRIPSI        QTY    HARGA")
     y -= 3*mm
     c.drawString(x, y, separator)
