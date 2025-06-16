@@ -5,11 +5,23 @@ import base64
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 import textwrap
 import random
 from datetime import datetime, timedelta
 from reportlab.lib.utils import ImageReader
 import zipfile
+
+# Register custom fonts
+try:
+    pdfmetrics.registerFont(TTFont('Calibri', 'Calibri.ttf'))
+    pdfmetrics.registerFont(TTFont('MSGothic', 'msgothic.ttc'))
+    pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
+    CUSTOM_FONTS_AVAILABLE = True
+except:
+    CUSTOM_FONTS_AVAILABLE = False
+    st.warning("Custom fonts not found. Using default fonts instead.")
 
 CASHIERS = ["Raymond", "Sofi", "Derren", "Jack", "Jackuavis", "Septian", "Joel", "Dgueby", "Gerald", "Sintia", "Chia", "Defi"]
 
@@ -121,22 +133,45 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     width, height = 45 * mm, 210 * mm
     c = canvas.Canvas(buffer, pagesize=(width, height))
 
-    font = "Helvetica-Bold" if use_bold else "Helvetica"
+    # Use custom fonts if available
+    if CUSTOM_FONTS_AVAILABLE:
+        if use_bold:
+            regular_font = "Calibri-Bold"
+            header_font = "Calibri-Bold"
+        else:
+            regular_font = "Calibri"
+            header_font = "Calibri"
+        # Use MSGothic for special characters if needed
+        japanese_font = "MSGothic"
+    else:
+        # Fallback to default fonts
+        if use_bold:
+            regular_font = "Helvetica-Bold"
+            header_font = "Helvetica-Bold"
+        else:
+            regular_font = "Helvetica"
+            header_font = "Helvetica"
+        japanese_font = "Helvetica"
 
     left_indent = 2 * mm
     x = left_indent
     y = height - 5 * mm
 
-    logo = ImageReader(logo_path)
-    logo_width = 10 * mm
-    logo_height = 10 * mm
-    c.drawImage(logo, x, y - logo_height, width=logo_width, height=logo_height)
+    # Logo
+    try:
+        logo = ImageReader(logo_path)
+        logo_width = 10 * mm
+        logo_height = 10 * mm
+        c.drawImage(logo, x, y - logo_height, width=logo_width, height=logo_height)
+        text_start = x + logo_width + 2 * mm
+    except:
+        text_start = x
 
-    text_start = x + logo_width + 2 * mm
-
-    c.setFont(font, 8)
+    # Store header information
+    c.setFont(header_font, 8)
     c.drawString(text_start, y, store_name)
     y -= 3*mm
+    c.setFont(regular_font, 7)
     c.drawString(text_start, y, "NPWP: 00.178.137.2-604.000")
     y -= 3*mm
     c.drawString(text_start, y, "Tanggal Pengukuhan: 06-06-97")
@@ -148,22 +183,26 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     c.drawString(text_start, y, "Telp: 6697927")
     y -= 8*mm
 
-    c.setFont(font, 8)
+    # Receipt details
+    c.setFont(regular_font, 8)
     c.drawString(x, y, f"{receipt_date} No: {random.randint(1000, 9999)}")
     if cashier_name:
         c.drawString(x, y - 3*mm, f"Kasir: {cashier_name}")
         y -= 3*mm
     y -= 1*mm
 
-    separator = '=' * int((width - 2*x) / c.stringWidth('=', font, 8))
+    # Separator
+    separator = '=' * int((width - 2*x) / c.stringWidth('=', regular_font, 8))
     y -= 2*mm
 
-    c.setFont("Helvetica", 8)
+    # Items header
+    c.setFont(regular_font, 8)
     c.drawString(x, y, "DESKRIPSI        QTY    HARGA")
     y -= 3*mm
     c.drawString(x, y, separator)
     y -= 3*mm
 
+    # Items list
     for item in items:
         name = item['name'][:15]
         quantity = item['quantity']
@@ -174,14 +213,16 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
         c.drawString(x, y, item_text)
         y -= 3*mm
         
+        # Discount information
         if item.get('hemat', 0) > 0:
             original_price = item.get('original_price', price)
             hemat_text = f"HEMAT: {item['hemat']:,.0f}"
-            c.setFillColorRGB(1, 0, 0)
+            c.setFillColorRGB(1, 0, 0)  # Red color for discount
             c.drawString(x + 2*mm, y, hemat_text)
-            c.setFillColorRGB(0, 0, 0)
+            c.setFillColorRGB(0, 0, 0)  # Reset to black
             y -= 3*mm
 
+    # Totals section
     y -= 1*mm
     c.drawString(x, y, separator)
     y -= 3*mm
@@ -203,7 +244,8 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     c.drawString(x, y, f"Total Item: {len(items)}")
     y -= 4*mm
 
-    c.setFont(font, 8)
+    # Footer
+    c.setFont(header_font, 8)
     footer_lines = [
         "**Terima kasih**",
         "SARAN ANDA KEPUASAN KAMI",
@@ -215,7 +257,7 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     ]
 
     for line in footer_lines:
-        text_width = c.stringWidth(line, font, 8)
+        text_width = c.stringWidth(line, header_font, 8)
         c.drawString((width - text_width) / 2, y, line)
         y -= 3*mm
 
@@ -309,12 +351,20 @@ def create_zip_file(receipts):
     zip_buffer.seek(0)
     return zip_buffer
 
+# Streamlit UI
 st.title("收据生成器")
+
+# Font status indicator
+if CUSTOM_FONTS_AVAILABLE:
+    st.success("自定义字体已加载 (Calibri, MS Gothic)")
+else:
+    st.warning("自定义字体未找到，使用默认字体")
 
 mode = st.radio("选择模式", ["手动", "自动"])
 use_bold = st.checkbox("使用粗体文本", value=True)
 store_name = st.text_input("商店名称:", "PT LION SUPERINDO")
 uploaded_logo = st.file_uploader("上传您的商店标志", type=["png", "jpg", "jpeg"])
+
 if uploaded_logo is not None:
     logo_path = "temp_logo.png"
     with open(logo_path, "wb") as f:
@@ -333,6 +383,19 @@ st.sidebar.write(f"🥬 Buah & Sayuran: {len(FRUITS_VEGETABLES)} items")
 st.sidebar.write(f"🥤 Minuman: {len(BEVERAGES)} items")
 st.sidebar.write(f"🛍️ Produk Lainnya: {len(OTHER_PRODUCTS)} items")
 st.sidebar.write(f"📊 Total Produk: {len(ITEMS)} items")
+
+# Font information in sidebar
+st.sidebar.header("Font Information")
+if CUSTOM_FONTS_AVAILABLE:
+    st.sidebar.success("✅ Calibri")
+    st.sidebar.success("✅ Calibri-Bold")
+    st.sidebar.success("✅ MS Gothic")
+else:
+    st.sidebar.error("❌ Custom fonts not available")
+    st.sidebar.info("Place font files in the same directory as this script:")
+    st.sidebar.write("• Calibri.ttf")
+    st.sidebar.write("• calibrib.ttf")
+    st.sidebar.write("• msgothic.ttc")
 
 if mode == "手动":
     st.subheader("设置购物商品")
@@ -457,4 +520,12 @@ st.write("产品分类:")
 st.write("• 60% 水果和蔬菜")
 st.write("• 20% 饮用水 (AQUA, AQUVIVA, LeMinerale, OASIS)")
 st.write("• 20% 其他产品 (米、油、牛奶、洗涤剂等)")
+
+# Font requirements note
+st.markdown("### 字体要求")
+st.write("为了正确显示，请确保以下字体文件位于同一目录中:")
+st.write("• `Calibri.ttf` - 常规Calibri字体")
+st.write("• `calibrib.ttf` - 粗体Calibri字体") 
+st.write("• `msgothic.ttc` - MS Gothic字体（用于特殊字符）")
+
 st.write("© 2024 收据生成器")
