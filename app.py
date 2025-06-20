@@ -327,7 +327,7 @@ if uploaded_logo is not None:
     with open(logo_path, "wb") as f:
         f.write(uploaded_logo.getbuffer())
 else:
-    logo_path = "default_logo.png"
+    logo_path = "logo1.png"
 
 if 'items' not in st.session_state:
     st.session_state['items'] = []
