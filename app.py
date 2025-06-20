@@ -5,27 +5,21 @@ import base64
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
+import textwrap
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-import textwrap
 import random
 from datetime import datetime, timedelta
 from reportlab.lib.utils import ImageReader
 import zipfile
 
-# Register custom fonts
-try:
-    pdfmetrics.registerFont(TTFont('Calibri', 'Calibri.ttf'))
-    pdfmetrics.registerFont(TTFont('MSGothic', 'msgothic.ttc'))
-    pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
-    CUSTOM_FONTS_AVAILABLE = True
-except:
-    CUSTOM_FONTS_AVAILABLE = False
-    st.warning("Custom fonts not found. Using default fonts instead.")
+pdfmetrics.registerFont(TTFont('Calibri', 'Calibri.ttf'))
+pdfmetrics.registerFont(TTFont('MSGothic', 'msgothic.ttc'))
+pdfmetrics.registerFont(TTFont('Calibri-Bold', 'calibrib.ttf'))
 
 CASHIERS = ["Raymond", "Sofi", "Derren", "Jack", "Jackuavis", "Septian", "Joel", "Dgueby", "Gerald", "Sintia", "Chia", "Defi"]
 
-# 60% Buah dan Sayuran
+# Kategori item dengan pembagian: 60% buah/sayur, 20% minuman, 20% lainnya
 FRUITS_VEGETABLES = [
     "Apel Fuji Premium", "Apel Red Delicious", "Apel Malang", "Apel Granny Smith", 
     "Pisang Ambon", "Pisang Raja", "Pisang Kepok", "Pisang Sunpride",
@@ -38,71 +32,60 @@ FRUITS_VEGETABLES = [
     "Bawang Bombay", "Bawang Merah Brebes", "Bawang Putih Kating",
     "Bayam Hijau Organik", "Kangkung Hidroponik", "Selada Romaine",
     "Selada Keriting", "Sawi Putih", "Sawi Hijau", "Pakcoy Premium",
-    "Daun Singkong", "Daun Pepaya", "Kemangi Segar", "Nanas Madu",
-    "Mangga Harum Manis", "Pepaya California", "Salak Pondoh", "Jambu Air",
-    "Timun Suri", "Labu Siam", "Terong Ungu", "Kacang Panjang"
+    "Daun Singkong", "Daun Pepaya", "Kemangi Segar", "Jagung Manis",
+    "Labu Siam", "Terong Ungu", "Timun Lokal", "Pare Organik",
+    "Kacang Panjang", "Buncis Premium", "Okra Segar", "Paprika Merah",
+    "Paprika Hijau", "Paprika Kuning", "Nanas Madu", "Pepaya California",
+    "Mangga Harum Manis", "Mangga Gedong", "Salak Pondoh", "Rambutan Binjai"
 ]
 
-# 20% Minuman dalam kemasan
 BEVERAGES = [
-    "AQUA Botol 330ml", "AQUA Botol 600ml", "AQUA Botol 1.5L",
-    "AQUA Galon 19L", "AQUVIVA Botol 330ml", "AQUVIVA Botol 600ml",
-    "AQUVIVA Botol 1L", "AQUVIVA Galon 19L", "LeMinerale Botol 330ml",
-    "LeMinerale Botol 600ml", "LeMinerale Botol 1L", "LeMinerale Galon 19L",
-    "OASIS Botol 330ml", "OASIS Botol 600ml", "OASIS Botol 1L",
-    "OASIS Galon 19L", "AQUA Kemasan Gelas 240ml", "AQUVIVA Kemasan Gelas 240ml",
-    "LeMinerale Kemasan Gelas 240ml", "OASIS Kemasan Gelas 240ml"
+    "AQUA 1 Liter", "AQUA 1.5 Liter", "AQUA 19 Liter", "AQUA 600ml",
+    "AQUVIVA 1 Liter", "AQUVIVA 1.5 Liter", "AQUVIVA 600ml", "AQUVIVA 330ml",
+    "LeMinerale 1 Liter", "LeMinerale 1.5 Liter", "LeMinerale 600ml", "LeMinerale 330ml",
+    "OASIS 1 Liter", "OASIS 1.5 Liter", "OASIS 600ml", "OASIS 330ml",
+    "AQUA Galon 19L", "AQUVIVA Galon 19L", "LeMinerale Galon 19L", "OASIS Galon 19L",
+    "AQUA Botol Jumbo 2L", "AQUVIVA Botol Jumbo 2L", "LeMinerale Botol Jumbo 2L"
 ]
 
-# 20% Produk non-buah dan non-sayur
-OTHER_PRODUCTS = [
-    "Beras Premium 5kg", "Beras Pandan Wangi 5kg", "Minyak Goreng Tropical 1L",
-    "Minyak Goreng Filma 2L", "Gula Pasir Gulaku 1kg", "Garam Kapal Api 500g",
-    "Telur Ayam Kampung 1kg", "Telur Ayam Negeri 1kg", "Susu UHT Indomilk 1L",
-    "Susu UHT Ultra Milk 1L", "Roti Tawar Sari Roti", "Roti Gandum Sari Roti",
-    "Mie Instan Indomie Goreng", "Mie Instan Sedaap", "Kopi Kapal Api 165g",
-    "Teh Celup Sariwangi 25pcs", "Detergen Rinso 800g", "Sabun Mandi Lifebuoy",
-    "Pasta Gigi Pepsodent", "Shampoo Pantene 170ml", "Tissue Paseo 250sheet",
-    "Sabun Cuci Piring Sunlight", "Kecap Manis ABC 620ml", "Saos Sambal ABC 340ml"
+OTHER_ITEMS = [
+    "Beras Pandan Wangi 5kg", "Beras Rojolele 5kg", "Minyak Goreng Tropical 2L",
+    "Minyak Goreng Filma 1L", "Gula Pasir Gulaku 1kg", "Garam Beryodium 500g",
+    "Teh Celup Sariwangi 25s", "Kopi Kapal Api 165g", "Susu UHT Indomilk 1L",
+    "Susu UHT Ultra Milk 1L", "Telur Ayam 1kg", "Daging Ayam Fillet 500g",
+    "Ikan Bandeng 500g", "Tahu Putih 250g", "Tempe Segar 250g",
+    "Mie Instan Indomie Goreng", "Mie Instan Indomie Kuah", "Sabun Mandi Lifebuoy",
+    "Shampoo Pantene 170ml", "Pasta Gigi Pepsodent 120g", "Deterjen Rinso 800g",
+    "Tissue Paseo 250s", "Sabun Cuci Piring Sunlight 800ml"
 ]
 
-def get_weighted_items():
-    """Menggabungkan semua kategori produk dengan proporsi yang ditentukan"""
-    all_items = []
-    
-    # 60% buah dan sayuran
-    fruits_vegetables_count = int(len(FRUITS_VEGETABLES) * 0.6)
-    all_items.extend(FRUITS_VEGETABLES[:fruits_vegetables_count])
-    
-    # 20% minuman
-    beverages_count = int(len(BEVERAGES) * 1.0)  # Ambil semua minuman
-    all_items.extend(BEVERAGES[:beverages_count])
-    
-    # 20% produk lainnya
-    other_products_count = int(len(OTHER_PRODUCTS) * 1.0)  # Ambil semua produk lainnya
-    all_items.extend(OTHER_PRODUCTS[:other_products_count])
-    
-    return all_items
-
-ITEMS = get_weighted_items()
-
-def get_item_price(item_name):
-    """Menentukan harga berdasarkan kategori produk"""
-    if any(beverage in item_name for beverage in ["AQUA", "AQUVIVA", "LeMinerale", "OASIS"]):
-        if "Galon 19L" in item_name:
-            return random.randint(15000, 25000)
-        elif "1.5L" in item_name or "1L" in item_name:
-            return random.randint(3000, 6000)
-        elif "600ml" in item_name:
-            return random.randint(2000, 4000)
-        elif "330ml" in item_name or "240ml" in item_name:
-            return random.randint(1500, 3000)
-    elif any(product in item_name for product in ["Beras", "Minyak", "Susu", "Detergen"]):
-        return random.randint(8000, 35000)
-    elif "Premium" in item_name:
-        return random.randint(3500, 12900)
-    else:
-        return random.randint(1500, 8900)
+def get_item_price(item_name, category):
+    """Menentukan harga berdasarkan kategori dan jenis item"""
+    if category == "fruits_vegetables":
+        if "Premium" in item_name:
+            return random.randint(3500, 12900)
+        else:
+            return random.randint(1500, 4900)
+    elif category == "beverages":
+        if "19L" in item_name or "Galon" in item_name:
+            return random.randint(18000, 25000)
+        elif "2L" in item_name or "Jumbo" in item_name:
+            return random.randint(8000, 12000)
+        elif "1.5 Liter" in item_name:
+            return random.randint(4000, 6000)
+        elif "1 Liter" in item_name:
+            return random.randint(3000, 5000)
+        else:  # 600ml, 330ml
+            return random.randint(2000, 3500)
+    else:  # other_items
+        if "5kg" in item_name or "2L" in item_name:
+            return random.randint(15000, 35000)
+        elif "1kg" in item_name or "1L" in item_name:
+            return random.randint(8000, 20000)
+        elif "500g" in item_name or "500ml" in item_name:
+            return random.randint(5000, 15000)
+        else:
+            return random.randint(2000, 12000)
 
 def generate_random_date():
     days_ago = random.randint(0, 7)
@@ -133,45 +116,22 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     width, height = 45 * mm, 210 * mm
     c = canvas.Canvas(buffer, pagesize=(width, height))
 
-    # Use custom fonts if available
-    if CUSTOM_FONTS_AVAILABLE:
-        if use_bold:
-            regular_font = "Calibri-Bold"
-            header_font = "Calibri-Bold"
-        else:
-            regular_font = "Calibri"
-            header_font = "Calibri"
-        # Use MSGothic for special characters if needed
-        japanese_font = "MSGothic"
-    else:
-        # Fallback to default fonts
-        if use_bold:
-            regular_font = "Helvetica-Bold"
-            header_font = "Helvetica-Bold"
-        else:
-            regular_font = "Helvetica"
-            header_font = "Helvetica"
-        japanese_font = "Helvetica"
+    font = "Calibri-Bold" if use_bold else "Calibri"
 
     left_indent = 2 * mm
     x = left_indent
     y = height - 5 * mm
 
-    # Logo
-    try:
-        logo = ImageReader(logo_path)
-        logo_width = 10 * mm
-        logo_height = 10 * mm
-        c.drawImage(logo, x, y - logo_height, width=logo_width, height=logo_height)
-        text_start = x + logo_width + 2 * mm
-    except:
-        text_start = x
+    logo = ImageReader(logo_path)
+    logo_width = 10 * mm
+    logo_height = 10 * mm
+    c.drawImage(logo, x, y - logo_height, width=logo_width, height=logo_height)
 
-    # Store header information
-    c.setFont(header_font, 8)
+    text_start = x + logo_width + 2 * mm
+
+    c.setFont(font, 8)
     c.drawString(text_start, y, store_name)
     y -= 3*mm
-    c.setFont(regular_font, 7)
     c.drawString(text_start, y, "NPWP: 00.178.137.2-604.000")
     y -= 3*mm
     c.drawString(text_start, y, "Tanggal Pengukuhan: 06-06-97")
@@ -183,26 +143,22 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     c.drawString(text_start, y, "Telp: 6697927")
     y -= 8*mm
 
-    # Receipt details
-    c.setFont(regular_font, 8)
+    c.setFont(font, 8)
     c.drawString(x, y, f"{receipt_date} No: {random.randint(1000, 9999)}")
     if cashier_name:
         c.drawString(x, y - 3*mm, f"Kasir: {cashier_name}")
         y -= 3*mm
     y -= 1*mm
 
-    # Separator
-    separator = '=' * int((width - 2*x) / c.stringWidth('=', regular_font, 8))
+    separator = '=' * int((width - 2*x) / c.stringWidth('=', font, 8))
     y -= 2*mm
 
-    # Items header
-    c.setFont(regular_font, 8)
+    c.setFont("MSGothic", 8)
     c.drawString(x, y, "DESKRIPSI        QTY    HARGA")
     y -= 3*mm
     c.drawString(x, y, separator)
     y -= 3*mm
 
-    # Items list
     for item in items:
         name = item['name'][:15]
         quantity = item['quantity']
@@ -213,16 +169,14 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
         c.drawString(x, y, item_text)
         y -= 3*mm
         
-        # Discount information
         if item.get('hemat', 0) > 0:
             original_price = item.get('original_price', price)
             hemat_text = f"HEMAT: {item['hemat']:,.0f}"
-            c.setFillColorRGB(1, 0, 0)  # Red color for discount
+            c.setFillColorRGB(1, 0, 0)
             c.drawString(x + 2*mm, y, hemat_text)
-            c.setFillColorRGB(0, 0, 0)  # Reset to black
+            c.setFillColorRGB(0, 0, 0)
             y -= 3*mm
 
-    # Totals section
     y -= 1*mm
     c.drawString(x, y, separator)
     y -= 3*mm
@@ -244,8 +198,7 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     c.drawString(x, y, f"Total Item: {len(items)}")
     y -= 4*mm
 
-    # Footer
-    c.setFont(header_font, 8)
+    c.setFont(font, 8)
     footer_lines = [
         "**Terima kasih**",
         "SARAN ANDA KEPUASAN KAMI",
@@ -257,7 +210,7 @@ def create_receipt(store_name, items, total, payment_method, receipt_date, logo_
     ]
 
     for line in footer_lines:
-        text_width = c.stringWidth(line, header_font, 8)
+        text_width = c.stringWidth(line, font, 8)
         c.drawString((width - text_width) / 2, y, line)
         y -= 3*mm
 
@@ -270,29 +223,41 @@ def generate_random_items():
     num_items = random.randint(19, 22)
     items = []
     
-    # Memastikan proporsi kategori dalam setiap struk
-    fruits_veg_count = int(num_items * 0.6)  # 60%
-    beverages_count = max(1, int(num_items * 0.2))  # 20%, minimal 1
-    others_count = num_items - fruits_veg_count - beverages_count  # sisanya
+    # Hitung jumlah item per kategori berdasarkan persentase
+    num_fruits_veg = int(num_items * 0.60)  # 60%
+    num_beverages = int(num_items * 0.20)   # 20%
+    num_others = num_items - num_fruits_veg - num_beverages  # 20% (sisa)
     
-    selected_items = []
+    # Pilih item dari setiap kategori
+    selected_fruits_veg = random.sample(FRUITS_VEGETABLES, min(num_fruits_veg, len(FRUITS_VEGETABLES)))
+    selected_beverages = random.sample(BEVERAGES, min(num_beverages, len(BEVERAGES)))
+    selected_others = random.sample(OTHER_ITEMS, min(num_others, len(OTHER_ITEMS)))
     
-    # Ambil items sesuai proporsi
-    if fruits_veg_count > 0:
-        selected_items.extend(random.sample(FRUITS_VEGETABLES, min(fruits_veg_count, len(FRUITS_VEGETABLES))))
-    if beverages_count > 0:
-        selected_items.extend(random.sample(BEVERAGES, min(beverages_count, len(BEVERAGES))))
-    if others_count > 0:
-        selected_items.extend(random.sample(OTHER_PRODUCTS, min(others_count, len(OTHER_PRODUCTS))))
+    # Gabungkan semua item dengan informasi kategori
+    all_selected = []
     
-    for item in selected_items:
+    for item in selected_fruits_veg:
+        all_selected.append((item, "fruits_vegetables"))
+    
+    for item in selected_beverages:
+        all_selected.append((item, "beverages"))
+    
+    for item in selected_others:
+        all_selected.append((item, "others"))
+    
+    # Randomize posisi item
+    random.shuffle(all_selected)
+    
+    # Buat list item dengan harga dan quantity
+    for item_name, category in all_selected:
         quantity = random.randint(1, 5)
-        price = get_item_price(item)
+        price = get_item_price(item_name, category)
         
         items.append({
-            "name": item,
+            "name": item_name,
             "quantity": quantity,
-            "price": price
+            "price": price,
+            "category": category
         })
 
     return apply_discount(items)
@@ -351,20 +316,12 @@ def create_zip_file(receipts):
     zip_buffer.seek(0)
     return zip_buffer
 
-# Streamlit UI
 st.title("收据生成器")
-
-# Font status indicator
-if CUSTOM_FONTS_AVAILABLE:
-    st.success("自定义字体已加载 (Calibri, MS Gothic)")
-else:
-    st.warning("自定义字体未找到，使用默认字体")
 
 mode = st.radio("选择模式", ["手动", "自动"])
 use_bold = st.checkbox("使用粗体文本", value=True)
 store_name = st.text_input("商店名称:", "PT LION SUPERINDO")
 uploaded_logo = st.file_uploader("上传您的商店标志", type=["png", "jpg", "jpeg"])
-
 if uploaded_logo is not None:
     logo_path = "temp_logo.png"
     with open(logo_path, "wb") as f:
@@ -377,26 +334,6 @@ if 'items' not in st.session_state:
 if 'cashier' not in st.session_state:
     st.session_state['cashier'] = random.choice(CASHIERS)
 
-# Tampilkan informasi kategori produk
-st.sidebar.header("Kategori Produk")
-st.sidebar.write(f"🥬 Buah & Sayuran: {len(FRUITS_VEGETABLES)} items")
-st.sidebar.write(f"🥤 Minuman: {len(BEVERAGES)} items")
-st.sidebar.write(f"🛍️ Produk Lainnya: {len(OTHER_PRODUCTS)} items")
-st.sidebar.write(f"📊 Total Produk: {len(ITEMS)} items")
-
-# Font information in sidebar
-st.sidebar.header("Font Information")
-if CUSTOM_FONTS_AVAILABLE:
-    st.sidebar.success("✅ Calibri")
-    st.sidebar.success("✅ Calibri-Bold")
-    st.sidebar.success("✅ MS Gothic")
-else:
-    st.sidebar.error("❌ Custom fonts not available")
-    st.sidebar.info("Place font files in the same directory as this script:")
-    st.sidebar.write("• Calibri.ttf")
-    st.sidebar.write("• calibrib.ttf")
-    st.sidebar.write("• msgothic.ttc")
-
 if mode == "手动":
     st.subheader("设置购物商品")
     num_items = st.number_input("商品数量:", min_value=1, value=5, step=1)
@@ -404,41 +341,63 @@ if mode == "手动":
     if st.button("生成商品"):
         st.session_state['items'] = []
         
-        # Menentukan proporsi untuk mode manual
-        fruits_veg_count = int(num_items * 0.6)
-        beverages_count = max(1, int(num_items * 0.2))
-        others_count = num_items - fruits_veg_count - beverages_count
+        # Hitung distribusi berdasarkan persentase
+        num_fruits_veg = int(num_items * 0.60)  # 60%
+        num_beverages = int(num_items * 0.20)   # 20%
+        num_others = num_items - num_fruits_veg - num_beverages  # 20% (sisa)
         
-        selected_items = []
+        # Pilih item dari setiap kategori
+        selected_fruits_veg = random.sample(FRUITS_VEGETABLES, min(num_fruits_veg, len(FRUITS_VEGETABLES)))
+        selected_beverages = random.sample(BEVERAGES, min(num_beverages, len(BEVERAGES)))
+        selected_others = random.sample(OTHER_ITEMS, min(num_others, len(OTHER_ITEMS)))
         
-        if fruits_veg_count > 0:
-            selected_items.extend(random.sample(FRUITS_VEGETABLES, min(fruits_veg_count, len(FRUITS_VEGETABLES))))
-        if beverages_count > 0:
-            selected_items.extend(random.sample(BEVERAGES, min(beverages_count, len(BEVERAGES))))
-        if others_count > 0:
-            selected_items.extend(random.sample(OTHER_PRODUCTS, min(others_count, len(OTHER_PRODUCTS))))
+        # Gabungkan dan randomize
+        all_selected = []
+        for item in selected_fruits_veg:
+            all_selected.append((item, "fruits_vegetables"))
+        for item in selected_beverages:
+            all_selected.append((item, "beverages"))
+        for item in selected_others:
+            all_selected.append((item, "others"))
         
-        for item in selected_items:
+        random.shuffle(all_selected)
+        
+        # Buat item dengan harga
+        for item_name, category in all_selected:
             quantity = random.randint(1, 5)
-            price = get_item_price(item)
+            price = get_item_price(item_name, category)
             
             st.session_state['items'].append({
-                "name": item,
+                "name": item_name,
                 "quantity": quantity,
-                "price": price
+                "price": price,
+                "category": category
             })
         
         st.session_state['items'] = apply_discount(st.session_state['items'])
 
     if st.session_state['items']:
         st.write("商品列表:")
+        
+        # Hitung statistik kategori
+        fruits_veg_count = sum(1 for item in st.session_state['items'] if item.get('category') == 'fruits_vegetables')
+        beverages_count = sum(1 for item in st.session_state['items'] if item.get('category') == 'beverages')
+        others_count = sum(1 for item in st.session_state['items'] if item.get('category') == 'others')
+        total_items = len(st.session_state['items'])
+        
+        st.write(f"📊 分布统计:")
+        st.write(f"🥬 水果蔬菜: {fruits_veg_count} 项 ({fruits_veg_count/total_items*100:.1f}%)")
+        st.write(f"🥤 饮料: {beverages_count} 项 ({beverages_count/total_items*100:.1f}%)")
+        st.write(f"🛒 其他: {others_count} 项 ({others_count/total_items*100:.1f}%)")
+        
         for item in st.session_state['items']:
+            category_icon = "🥬" if item.get('category') == 'fruits_vegetables' else "🥤" if item.get('category') == 'beverages' else "🛒"
             if item.get('hemat', 0) > 0:
-                st.write(f"{item['name']} - Jumlah: {item['quantity']} - "
+                st.write(f"{category_icon} {item['name']} - Jumlah: {item['quantity']} - "
                          f"Harga: Rp {item['price']:,} "
                          f"(HEMAT: Rp {item['hemat']:,})")
             else:
-                st.write(f"{item['name']} - Jumlah: {item['quantity']} - "
+                st.write(f"{category_icon} {item['name']} - Jumlah: {item['quantity']} - "
                          f"Harga: Rp {item['price']:,}")
 
     use_current_date = st.checkbox("使用当前日期和时间", value=False)
@@ -516,16 +475,5 @@ st.markdown("---")
 st.markdown("### 关于应用")
 st.write("此应用程序用于生成 Superindo 购物收据。")
 st.write("选择手动模式以设置收据详细信息，或选择自动模式以一次生成多个收据。")
-st.write("产品分类:")
-st.write("• 60% 水果和蔬菜")
-st.write("• 20% 饮用水 (AQUA, AQUVIVA, LeMinerale, OASIS)")
-st.write("• 20% 其他产品 (米、油、牛奶、洗涤剂等)")
-
-# Font requirements note
-st.markdown("### 字体要求")
-st.write("为了正确显示，请确保以下字体文件位于同一目录中:")
-st.write("• `Calibri.ttf` - 常规Calibri字体")
-st.write("• `calibrib.ttf` - 粗体Calibri字体") 
-st.write("• `msgothic.ttc` - MS Gothic字体（用于特殊字符）")
-
+st.write("📊 商品分布: 60% 水果蔬菜, 20% 饮料, 20% 其他商品")
 st.write("© 2024 收据生成器")
