@@ -91,7 +91,7 @@ def generate_random_date():
     days_ago = random.randint(0, 7)
     random_date = datetime.now() - timedelta(days=days_ago)
     random_time = datetime.strptime(f"{random.randint(8, 21)}:{random.randint(0, 59)}:{random.randint(0, 59)}", "%H:%M:%S").time()
-    return random_date.strftime("%y-%m-%d") + f" ({random_time.strftime('%H:%M:%S')})"
+    return random_date.strftime("%yyyy-%mm-%dd") + f" ({random_time.strftime('%H:%M:%S')})"
 
 def apply_discount(items):
     discounted_items = []
